@@ -205,7 +205,4 @@ int main() {
 
     printf("LIBERA: \n");
     libera_pos_ordem(raiz);
-
-
-
 }
