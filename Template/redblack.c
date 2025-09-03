@@ -83,13 +83,39 @@ void transplante(struct nodo *raiz, struct nodo *nodoA, struct nodo *nodoB) {
 
     if (nodoA->pai == SENTINELA) {
         raiz = nodoB;
+    } else {
+        if (nodoA == nodoA->pai->fe) {
+            nodoA->pai->fe = nodoB;
+        } else {
+           nodoA->pai->fd = nodoB;
+        }      
     }
-    
-    
+    nodoB->pai = nodoA->pai;
 }
 
 // o nodo x é rotacionado a esquerda
 void rotacao_esquerda(struct nodo *raiz, struct nodo *nodo) {
+    struct nodo *aux = nodo->fd;
+    nodo->fd = aux->fe;
+    if (aux->fe != SENTINELA) {
+        aux->fe->pai = nodo;
+    }
+    aux->pai = nodo->pai;
+    if (nodo->pai == SENTINELA) {
+        raiz = aux;
+    } else {
+        if (nodo == nodo->pai->fe) {
+            nodo->pai->fe = aux;
+        } else {
+            nodo->pai->fd = aux;
+        }
+    }
+    aux->fe = nodo;
+    nodo->pai = aux;
+}
+
+// o nodo x é rotacionado a direita
+void rotacao_direita(struct nodo *raiz, struct nodo *nodo) {
 
 }
 
@@ -105,6 +131,31 @@ void delete_fix(struct nodo *raiz, struct nodo *nodo) {
 
 //retorna SENTINELA se não foi possível inserir
 struct nodo* inserir(struct nodo** raiz, int chave) {
+    struct nodo *novo_nodo = cria_nodo(chave);
+    struct nodo *x = *raiz;
+    struct nodo *y = SENTINELA;
+
+    while (x != SENTINELA) {
+        y = x;
+        if (novo_nodo->chave < x->chave) {
+            x = x->fe;
+        } else {
+            x = x->fd;
+        }        
+    }
+
+    novo_nodo->pai = y;
+    if (y == SENTINELA) {
+        *raiz = novo_nodo;
+    } else {
+        if (novo_nodo->chave < y->chave) {
+            y->fe = novo_nodo;
+        } else {
+            y->fd = novo_nodo;
+        }
+    }
+    insere_fix(raiz, novo_nodo);
+    
 
 }
 
