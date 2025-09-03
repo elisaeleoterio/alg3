@@ -2,6 +2,7 @@
 #define REDBLACK_H_
 
 struct nodo {
+    
     int chave;
     struct nodo *pai;
     struct nodo *fd;
