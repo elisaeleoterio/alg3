@@ -2,22 +2,13 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <stdio.h>
 
-// Declaração da variável global do SENTINELA
-struct nodo *SENTINELA = NULL;
-void inicia_sentinela() {
-    if (SENTINELA == NULL) {
-        SENTINELA = malloc(sizeof(struct nodo));
-        if (!SENTINELA) {
-            exit(1);
-        }
-    }
 
-    SENTINELA->chave = -1;
-    SENTINELA->cor = 0;
-    SENTINELA->fd = SENTINELA;
-    SENTINELA->fe = SENTINELA;
-    SENTINELA->pai = SENTINELA;
+
+void matarProgramaFaltaMemoria() {
+    printf("Erro por falta de memória\n");
+    exit(1);
 }
 
 struct aluno* getAluno(){
@@ -30,8 +21,9 @@ struct aluno* getAluno(){
 		matarProgramaFaltaMemoria();
         
     retorno->nomeDinf = malloc(sizeof("ere24"));
-    if(!retorno->nomeDinf)
+    if(!retorno->nomeDinf) {
         matarProgramaFaltaMemoria();
+    }
     
 	strcpy(retorno->nome, "Elisa Rocha Eleotério");
     strcpy(retorno->nomeDinf, "ere24");
@@ -58,22 +50,6 @@ void imprimirDadosAluno(){
 
 //FUNÇÕES RED BLACK
 
-struct nodo *cria_nodo(int valor) {
-    struct nodo *nodo = malloc(sizeof(struct nodo));
-    if (!nodo) {
-        printf("Erro ao criar novo nodo");
-        exit(1);
-    }
-
-    nodo->chave = valor;
-    nodo->cor = 0;
-    nodo->fd = SENTINELA;
-    nodo->fe = SENTINELA;
-    nodo->pai = SENTINELA;   
-    
-    return nodo;
-}
-
 // Subárvore nodoB toma o lugar da subárvore nodoA
 void transplante(struct nodo *raiz, struct nodo *nodoA, struct nodo *nodoB) {
     if (!raiz || !nodoA || !nodoB) {
@@ -81,7 +57,7 @@ void transplante(struct nodo *raiz, struct nodo *nodoA, struct nodo *nodoB) {
         exit(1);
     }
 
-    if (nodoA->pai == SENTINELA) {
+    if (nodoA->pai == sentinela) {
         raiz = nodoB;
     } else {
         if (nodoA == nodoA->pai->fe) {
@@ -94,15 +70,15 @@ void transplante(struct nodo *raiz, struct nodo *nodoA, struct nodo *nodoB) {
 }
 
 // o nodo x é rotacionado a esquerda
-void rotacao_esquerda(struct nodo *raiz, struct nodo *nodo) {
+void rotacao_esquerda(struct nodo **raiz, struct nodo *nodo) {
     struct nodo *aux = nodo->fd;
     nodo->fd = aux->fe;
-    if (aux->fe != SENTINELA) {
+    if (aux->fe != sentinela) {
         aux->fe->pai = nodo;
     }
     aux->pai = nodo->pai;
-    if (nodo->pai == SENTINELA) {
-        raiz = aux;
+    if (nodo->pai == sentinela) {
+        *raiz = aux;
     } else {
         if (nodo == nodo->pai->fe) {
             nodo->pai->fe = aux;
@@ -115,13 +91,62 @@ void rotacao_esquerda(struct nodo *raiz, struct nodo *nodo) {
 }
 
 // o nodo x é rotacionado a direita
-void rotacao_direita(struct nodo *raiz, struct nodo *nodo) {
-
+void rotacao_direita(struct nodo **raiz, struct nodo *nodo) {
+    struct nodo *aux = nodo->fe;
+    nodo->fe = aux->fd;
+    if (aux->fd != sentinela) {
+        aux->fd->pai = nodo;
+    }
+    aux->pai = nodo->pai;
+    if (nodo->pai == sentinela) {
+        *raiz = aux;
+    } else {
+        if (nodo == nodo->pai->fd) {
+            nodo->pai->fd = aux;
+        } else {
+            nodo->pai->fe = aux;
+        }
+    }
+    aux->fd = nodo;
+    nodo->pai = aux;
 }
 
-// Altera a árvore para manter as características da Red Black após uma inserção
-void insere_fix(struct nodo *raiz, struct nodo *nodo) {
+// // Altera a árvore para manter as características da Red Black após uma inserção
+void insere_fix(struct nodo **raiz, struct nodo *nodo) {
+    // Verifica ponteiros
 
+    while (nodo->pai->cor) {
+        // O pai do nodo inserido é um filho esquerdo
+        if (nodo->pai == nodo->pai->pai->fe) {
+            struct nodo *tio = nodo->pai->pai->fd;
+            if (tio->cor) {
+                nodo->pai->cor = 0;
+                tio->cor = 0;
+                nodo->pai->pai->cor = 1;
+                nodo = nodo->pai->pai;
+            } else {
+                if (nodo == nodo->pai->fd) {
+                    nodo = nodo->pai;
+                    rotacao_esquerda(raiz, nodo);
+                }
+            }
+        // O pai do nodo inserido é um filho direito
+        } else {
+            struct nodo *tio = nodo->pai->pai->fe;
+            if (tio->cor) {
+                nodo->pai->cor = 0;
+                tio->cor = 0;
+                nodo->pai->pai->cor = 1;
+                nodo = nodo->pai->pai;
+            } else {
+                if (nodo == nodo->pai->fe) {
+                    nodo = nodo->pai;
+                    rotacao_direita(raiz, nodo);
+                }
+            }
+        }
+    }
+    (*raiz)->cor = 0;
 }
 
 // Altera a árvore para manter as características da Red Black após uma exclusão
@@ -133,9 +158,9 @@ void delete_fix(struct nodo *raiz, struct nodo *nodo) {
 struct nodo* inserir(struct nodo** raiz, int chave) {
     struct nodo *novo_nodo = cria_nodo(chave);
     struct nodo *x = *raiz;
-    struct nodo *y = SENTINELA;
+    struct nodo *y = sentinela;
 
-    while (x != SENTINELA) {
+    while (x != sentinela) {
         y = x;
         if (novo_nodo->chave < x->chave) {
             x = x->fe;
@@ -145,7 +170,7 @@ struct nodo* inserir(struct nodo** raiz, int chave) {
     }
 
     novo_nodo->pai = y;
-    if (y == SENTINELA) {
+    if (y == sentinela) {
         *raiz = novo_nodo;
     } else {
         if (novo_nodo->chave < y->chave) {
@@ -154,25 +179,27 @@ struct nodo* inserir(struct nodo** raiz, int chave) {
             y->fd = novo_nodo;
         }
     }
-    insere_fix(raiz, novo_nodo);
-    
+    //insere_fix(raiz, novo_nodo);
 
+    return NULL;
 }
 
 // retorna o número de nodos excluídos
 int excluir(struct nodo** raiz, int chave) {
+    // Verificação de ponteiros
 
+    struct nodo *aux = 
 }
 
-//retorna SENTINELA se não existe
-struct nodo* buscar(struct nodo* raiz, int chave) {
+// //retorna SENTINELA se não existe
+// struct nodo* buscar(struct nodo* raiz, int chave) {
 
-}
+// }
 
-void imprimirEmOrdem(struct nodo* nodo) {
+// void imprimirEmOrdem(struct nodo* nodo) {
 
-}
+// }
 
-void imprimirEmLargura(struct nodo* raiz) {
+// void imprimirEmLargura(struct nodo* raiz) {
 
-}
+// }

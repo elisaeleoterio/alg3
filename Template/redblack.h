@@ -1,6 +1,7 @@
 #ifndef REDBLACK_H_
 #define REDBLACK_H_
 
+extern struct nodo *sentinela;
 struct nodo {
     
     int chave;
@@ -26,7 +27,7 @@ struct nodo* inserir(struct nodo** raiz, int chave);
 // retorna o número de nodos excluídos
 int excluir(struct nodo** raiz, int chave);
 
-//retorna SENTINELA se não existe
+// retorna SENTINELA se não existe
 struct nodo* buscar(struct nodo* raiz, int chave);
 
 void imprimirEmOrdem(struct nodo* nodo);
