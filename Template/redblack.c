@@ -71,8 +71,20 @@ void transplante(struct nodo *raiz, struct nodo *nodoA, struct nodo *nodoB) {
 
 // o nodo x é rotacionado a esquerda
 void rotacao_esquerda(struct nodo **raiz, struct nodo *nodo) {
+    if (!*raiz || !nodo) {
+        printf("Ponteiro nulo\n");
+        exit(1);
+    }
+    
+    // Verifica se o filho do nodo é sentinela
+    if (nodo->fd == sentinela) {
+        printf("Nodo é sentinela\n");
+        exit(1);
+    }
+    
     struct nodo *aux = nodo->fd;
     nodo->fd = aux->fe;
+
     if (aux->fe != sentinela) {
         aux->fe->pai = nodo;
     }
@@ -92,21 +104,37 @@ void rotacao_esquerda(struct nodo **raiz, struct nodo *nodo) {
 
 // o nodo x é rotacionado a direita
 void rotacao_direita(struct nodo **raiz, struct nodo *nodo) {
+    // Verificação de ponteiros
+    if (!*raiz || !nodo) {
+        printf("Ponteiro nulo\n");
+        exit(1);
+    }
+    
+    // Verifica se o filho do nodo é sentinela
+    if (nodo->fe == sentinela) {
+        printf("Nodo é sentinela\n");
+        exit(1);
+    }
+
     struct nodo *aux = nodo->fe;
     nodo->fe = aux->fd;
     if (aux->fd != sentinela) {
         aux->fd->pai = nodo;
     }
+
     aux->pai = nodo->pai;
+    // Nodo é a raiz da árvore
     if (nodo->pai == sentinela) {
         *raiz = aux;
     } else {
+        
         if (nodo == nodo->pai->fd) {
             nodo->pai->fd = aux;
         } else {
             nodo->pai->fe = aux;
         }
     }
+
     aux->fd = nodo;
     nodo->pai = aux;
 }
@@ -151,7 +179,76 @@ void insere_fix(struct nodo **raiz, struct nodo *nodo) {
 
 // Altera a árvore para manter as características da Red Black após uma exclusão
 void delete_fix(struct nodo *raiz, struct nodo *nodo) {
+    // Verificação dos ponteiros
+    if (!raiz || !nodo) {
+        printf("Ponteiros nulos\n");
+        exit(1);
+    }
+    
 
+    while (nodo != raiz && !nodo->cor) {
+        struct nodo *aux;
+        // O nodo é um filho esquerdo
+        if (nodo == nodo->pai->fe) {
+            aux = nodo->pai->fd;
+            if (aux->cor) {
+                aux->cor = 0;
+                nodo->pai->cor = 1;
+                rotacao_esquerda(raiz, nodo->pai);
+                aux = nodo->pai;
+            }
+
+            if (!aux->fe->cor && !aux->fd->cor) {
+                aux->cor = 1;
+                nodo = nodo->pai;
+            }   else {
+                if (!aux->fd->cor) {
+                    aux->fe->cor = 0;
+                    aux->cor = 1;
+                    rotacao_direita(raiz, aux);
+                    aux = nodo->pai->fd;
+                }
+
+                aux->cor = nodo->pai->cor;
+                nodo->pai->cor = 0;
+                aux->fd->cor = 0;
+                rotacao_esquerda(raiz, aux->pai);
+                nodo = raiz;
+            }     
+        }
+
+        // O mesmo, porém o contrário
+
+        // Nodo é um filho direito
+        if (nodo == nodo->pai->fd) {
+            aux = nodo->pai->fe;
+            if (aux->cor) {
+                aux->cor = 0;
+                nodo->pai->cor = 1;
+                rotacao_direita(raiz, nodo->pai);
+                aux = nodo->pai;
+            }
+
+            if (!aux->fe->cor && !aux->fd->cor) {
+                aux->cor = 1;
+                nodo = nodo->pai;
+            }   else {
+                if (!aux->fe->cor) {
+                    aux->fd->cor = 0;
+                    aux->cor = 1;
+                    rotacao_esquerda(raiz, aux);
+                    aux = nodo->pai->fe;
+                }
+
+                aux->cor = nodo->pai->cor;
+                nodo->pai->cor = 0;
+                aux->fe->cor = 0;
+                rotacao_direita(raiz, aux->pai);
+                nodo = raiz;
+            }
+        }
+    }
+    nodo->cor = 0;
 }
 
 //retorna SENTINELA se não foi possível inserir
@@ -179,7 +276,7 @@ struct nodo* inserir(struct nodo** raiz, int chave) {
             y->fd = novo_nodo;
         }
     }
-    //insere_fix(raiz, novo_nodo);
+    insere_fix(raiz, novo_nodo);
 
     return NULL;
 }
@@ -187,19 +284,80 @@ struct nodo* inserir(struct nodo** raiz, int chave) {
 // retorna o número de nodos excluídos
 int excluir(struct nodo** raiz, int chave) {
     // Verificação de ponteiros
+    if (!*raiz) {
+        printf("Ponteiro nulo\n");
+        exit(1);
+    }
 
-    struct nodo *aux = 
+    struct nodo *remover = buscar(raiz, chave);
+    int removidos = 0;
+
+    // equanto houver um nodo com essa chave (a busca não retorna o sentinela)
+    while (remover->cor != -1) {
+        struct nodo *aux = remover;
+    
+        int corOg = aux->cor;
+        struct nodo *temp;
+    
+        if (remover->fe == sentinela) {
+            temp = remover->fd;
+            transplante(raiz, remover, remover->fd);
+        } else {
+            if (remover->fd == sentinela) {
+                temp = remover->fe;
+                transplante(raiz, remover, remover->fe);
+            } else {
+                aux = minimo(remover->fd);
+                corOg = aux->cor;
+                temp = aux->fd;
+                if (aux != remover->fd) {
+                    transplante(raiz, aux, aux->fd);
+                    aux->fd = remover->fd;
+                    aux->fd->pai = aux;
+                } else {
+                    temp->pai = aux;
+                }
+                transplante(raiz, remover, aux);
+                aux->fe = remover->fe;
+                aux->fe->pai = aux;
+                aux->cor = remover->cor;
+            }
+        }
+        if (!corOg) {
+            delete_fix(raiz, temp);
+        }
+    }
+    removidos++;
+    remover = buscar(raiz, chave);
 }
 
 // //retorna SENTINELA se não existe
-// struct nodo* buscar(struct nodo* raiz, int chave) {
+struct nodo* buscar(struct nodo* nodo, int chave) {
+    if (!nodo) {
+        printf("Ponteiro nulo\n");
+        exit(1);
+    }
+    
+    if (nodo == sentinela || nodo->chave == chave) {
+        return nodo;
+    }
 
-// }
+    if (chave < nodo->chave) {
+        return buscar(nodo->fe, chave);
+    }
 
-// void imprimirEmOrdem(struct nodo* nodo) {
+    return buscar(nodo->fd, chave);
+}
 
-// }
+// Preciso imprimir a sentinela??
+void imprimirEmOrdem(struct nodo* nodo) {
+    if (nodo != sentinela) {
+        imprimirEmOrdem(nodo->fe);
+        printf("Chave: %d.\n", nodo->chave);
+        imprimirEmOrdem(nodo->fd);
+    }
+}
 
-// void imprimirEmLargura(struct nodo* raiz) {
+void imprimirEmLargura(struct nodo* raiz) {
 
-// }
+}
