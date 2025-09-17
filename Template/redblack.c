@@ -5,12 +5,14 @@
 #include <stdio.h>
 
 
-
+// FUNÇÕES DE VERIFICAÇÃO
 void matarProgramaFaltaMemoria() {
-    printf("Erro por falta de memória\n");
+    fprintf(stderr, "Erro por falta de memória\n");
     exit(1);
 }
 
+
+// FUNÇÕES ALUNO
 struct aluno* getAluno(){
     struct aluno* retorno = malloc(sizeof(struct aluno));
     if(!retorno)
@@ -46,9 +48,80 @@ void imprimirDadosAluno(){
     return;
 }
 
+// FUNÇÕES FILA
+struct fila {
+    struct nodo **nodos;
+    uint32_t tamanho;
+}
 
+// Aloca dinâmicamente a fila e os nodos e seta o tamanho para 0
+struct fila *fila_criar(uint32_t tamanho) {
+    struct fila *fila = malloc(sizeof(struct fila));
+    if(!fila) {
+        matarProgramaFaltaMemoria();
+        exit(1);
+    }
+
+    fila->nodos = malloc(tamanho * sizeof(struct nodo*));
+    if(!fila->nodos) {
+        free(fila);
+        matarProgramaFaltaMemoria();
+        exit(1);
+    }
+
+    fila->tamanho = 0;
+
+    return fila;
+}
+
+void enfileirar(struct fila *fila, struct nodo *nodo, uint32_t tamanho) {
+    if(!fila || !nodo) {
+        printf("Ponteiros nulos.\n");
+        exit(1);
+    }
+
+    if(fila->tamanho == tamanho) {
+        printf("Capacidade da fila estrapolado\n");
+        exit(1);
+    }
+
+    fila->nodos[fila->tamanho] = nodo;
+    fila->tamanho++;
+}
 
 //FUNÇÕES RED BLACK
+
+void inicia_sentinela() {
+    if (sentinela == NULL) {
+        sentinela = malloc(sizeof(struct nodo));
+        if (!sentinela) {
+            matarProgramaFaltaMemoria();
+            exit(1);
+        }
+    }
+
+    sentinela->chave = -1;
+    sentinela->cor = 0;
+    sentinela->fd = sentinela;
+    sentinela->fe = sentinela;
+    sentinela->pai = sentinela;
+}
+
+struct nodo *cria_nodo(int valor) {
+    struct nodo *nodo = malloc(sizeof(struct nodo));
+    if (!nodo) {
+        matarProgramaFaltaMemoria();
+        exit(1);
+    }
+
+    nodo->chave = valor;
+    nodo->cor = 0;
+    nodo->fd = sentinela;
+    nodo->fe = sentinela;
+    nodo->pai = sentinela;   
+    
+    return nodo;
+}
 
 // Subárvore nodoB toma o lugar da subárvore nodoA
 void transplante(struct nodo *raiz, struct nodo *nodoA, struct nodo *nodoB) {
@@ -253,6 +326,13 @@ void delete_fix(struct nodo *raiz, struct nodo *nodo) {
 
 //retorna SENTINELA se não foi possível inserir
 struct nodo* inserir(struct nodo** raiz, int chave) {
+    
+    // Não pode inserir uma chave duplicada
+    if(buscar(raiz, chave) != sentinela) {
+        printf("Chave repetida.\n");
+        return sentinela;
+    }
+    
     struct nodo *novo_nodo = cria_nodo(chave);
     struct nodo *x = *raiz;
     struct nodo *y = sentinela;
@@ -358,6 +438,26 @@ void imprimirEmOrdem(struct nodo* nodo) {
     }
 }
 
-void imprimirEmLargura(struct nodo* raiz) {
 
+void imprimirEmLargura(struct nodo* raiz) {
+    if(!raiz) {
+        printf("Ponteiro nulo\n");
+        exit(1);
+    }
+
+    criar_fila();
+
+    enfileirar(fila, r);
+    while(fila_tamanho(fila) > 0) {
+        struct nodo *nodo = fila_remove(fila);
+        printf("Chave: %d.\n", nodo->chave);
+
+        if(nodo->fe != sentinela) {
+            enfileirar(fila, nodo->fe);
+        }
+
+        if(nodo->fd != sentinela) {
+            enfileirar(fila, nodo->fd);
+        }
+    }
 }
