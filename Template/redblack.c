@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
+#include <stdint.h>
 
 
 // FUNÇÕES DE VERIFICAÇÃO
@@ -56,7 +57,7 @@ void imprimirDadosAluno(){
 struct fila {
     struct nodo **nodos; // vetor de ponteiros para os nodos
     uint32_t tamanho;
-}
+};
 
 // Aloca dinâmicamente a fila e os nodos e seta o tamanho para 0
 struct fila *filaCriar(uint32_t tamanho) {
@@ -165,7 +166,7 @@ void transplante(struct nodo *raiz, struct nodo *nodoA, struct nodo *nodoB) {
 
 // o nodo x é rotacionado a esquerda
 void rotacaoEsquerda(struct nodo **raiz, struct nodo *nodo) {
-    if (!*raiz || !nodo) {
+    if (!raiz || !nodo) {
         matarProgramaPonteiroNulo();
     }
     
@@ -198,7 +199,7 @@ void rotacaoEsquerda(struct nodo **raiz, struct nodo *nodo) {
 // o nodo x é rotacionado a direita
 void rotacaoDireita(struct nodo **raiz, struct nodo *nodo) {
     // Verificação de ponteiros
-    if (!*raiz || !nodo) {
+    if (!raiz || !nodo) {
         matarProgramaPonteiroNulo();
     }
     
@@ -273,13 +274,13 @@ void insereFix(struct nodo **raiz, struct nodo *nodo) {
 }
 
 // Altera a árvore para manter as características da Red Black após uma exclusão
-void deleteFix(struct nodo *raiz, struct nodo *nodo) {
+void deleteFix(struct nodo **raiz, struct nodo *nodo) {
     // Verificação dos ponteiros
     if (!raiz || !nodo) {
         matarProgramaPonteiroNulo();
     }
     
-    while (nodo != raiz && !nodo->cor) {
+    while (nodo != *raiz && !nodo->cor) {
         struct nodo *aux;
         // O nodo é um filho esquerdo
         if (nodo == nodo->pai->fe) {
@@ -306,7 +307,7 @@ void deleteFix(struct nodo *raiz, struct nodo *nodo) {
                 nodo->pai->cor = 0;
                 aux->fd->cor = 0;
                 rotacaoEsquerda(raiz, aux->pai);
-                nodo = raiz;
+                nodo = *raiz;
             }     
         }
         // Nodo é um filho direito
@@ -334,7 +335,7 @@ void deleteFix(struct nodo *raiz, struct nodo *nodo) {
                 nodo->pai->cor = 0;
                 aux->fe->cor = 0;
                 rotacaoDireita(raiz, aux->pai);
-                nodo = raiz;
+                nodo = *raiz;
             }
         }
     }
@@ -342,13 +343,13 @@ void deleteFix(struct nodo *raiz, struct nodo *nodo) {
 }
 
 //retorna SENTINELA se não foi possível inserir
-struct nodo* inserir(struct nodo** raiz, int chave) {
+struct nodo* inserir(struct nodo **raiz, int chave) {
     if(!*raiz) {
         matarProgramaPonteiroNulo();
     }
 
     // Não pode inserir uma chave duplicada
-    if(buscar(raiz, chave) != sentinela) {
+    if(buscar(*raiz, chave) != sentinela) {
         printf("Chave repetida.\n");
         return sentinela;
     }
@@ -383,7 +384,16 @@ struct nodo* inserir(struct nodo** raiz, int chave) {
 
 
 struct nodo *minimo(struct nodo *raiz) {
+    if (!raiz) {
+        matarProgramaPonteiroNulo();
+    }
+    
+    struct nodo *min = raiz;
+    while(min->fe != sentinela) {
+        min = min->fe;
+    }
 
+    return min;
 }
 
 // retorna o número de nodos excluídos
@@ -393,7 +403,7 @@ int excluir(struct nodo** raiz, int chave) {
         matarProgramaPonteiroNulo();
     }
 
-    struct nodo *remover = buscar(raiz, chave);
+    struct nodo *remover = buscar(*raiz, chave);
     int removidos = 0;
 
     // equanto houver um nodo com essa chave (a busca não retorna o sentinela)
@@ -405,23 +415,23 @@ int excluir(struct nodo** raiz, int chave) {
     
         if (remover->fe == sentinela) {
             temp = remover->fd;
-            transplante(raiz, remover, remover->fd);
+            transplante(*raiz, remover, remover->fd);
         } else {
             if (remover->fd == sentinela) {
                 temp = remover->fe;
-                transplante(raiz, remover, remover->fe);
+                transplante(*raiz, remover, remover->fe);
             } else {
                 aux = minimo(remover->fd);
                 corOg = aux->cor;
                 temp = aux->fd;
                 if (aux != remover->fd) {
-                    transplante(raiz, aux, aux->fd);
+                    transplante(*raiz, aux, aux->fd);
                     aux->fd = remover->fd;
                     aux->fd->pai = aux;
                 } else {
                     temp->pai = aux;
                 }
-                transplante(raiz, remover, aux);
+                transplante(*raiz, remover, aux);
                 aux->fe = remover->fe;
                 aux->fe->pai = aux;
                 aux->cor = remover->cor;
@@ -432,7 +442,9 @@ int excluir(struct nodo** raiz, int chave) {
         }
     }
     removidos++;
-    remover = buscar(raiz, chave);
+    remover = buscar(*raiz, chave);
+
+    return removidos;
 }
 
 // //retorna SENTINELA se não existe
@@ -461,25 +473,33 @@ void imprimirEmOrdem(struct nodo* nodo) {
     }
 }
 
+uint32_t contarElementos(struct nodo *raiz) {
+    if(raiz != sentinela) {
+        return 0;
+    }
+
+    return 1 + contarElementos(raiz->fe) + contarElementos(raiz->fd);
+}
 
 void imprimirEmLargura(struct nodo* raiz) {
     if(!raiz) {
         matarProgramaPonteiroNulo();
     }
 
-    struct fila *fila = criarFila();
+    uint32_t tamanho = contarElementos(raiz);
+    struct fila *fila = filaCriar(tamanho);
 
-    enfileirar(fila, r);
+    enfileirar(fila, raiz, tamanho);
     while(fila->tamanho > 0) {
         struct nodo *nodo = filaRemove(fila);
         printf("Chave: %d.\n", nodo->chave);
 
         if(nodo->fe != sentinela) {
-            enfileirar(fila, nodo->fe);
+            enfileirar(fila, nodo->fe, tamanho);
         }
 
         if(nodo->fd != sentinela) {
-            enfileirar(fila, nodo->fd);
+            enfileirar(fila, nodo->fd, tamanho);
         }
     }
 }

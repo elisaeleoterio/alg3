@@ -22,11 +22,6 @@ void inicia_sentinela() {
 	sentinela->pai = sentinela;
 }
 
-// Protótipo de funções auxiliares do main
-
-void inicia_sentinela();
-struct nodo *cria_nodo();
-
 
 int main(){
 
@@ -73,22 +68,4 @@ int main(){
 	}
 
 	return 0;
-}
-// FUNÇÔES AUXILIARES UTILIZADAS NO MAIN:
-
-
-struct nodo *cria_nodo(int valor) {
-	struct nodo *nodo = malloc(sizeof(struct nodo));
-	if (!nodo) {
-		printf("Erro ao criar novo nodo");
-		exit(1);
-	}
-
-	nodo->chave = valor;
-	nodo->cor = 0;
-	nodo->fd = sentinela;
-	nodo->fe = sentinela;
-	nodo->pai = sentinela;   
-	
-	return nodo;
 }
