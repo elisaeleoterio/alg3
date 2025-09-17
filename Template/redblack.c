@@ -11,6 +11,10 @@ void matarProgramaFaltaMemoria() {
     exit(1);
 }
 
+void matarProgramaPonteiroNulo() {
+    fprintf(stderr, "Erro por ponteiro nulo\n");
+    exit(1);
+}
 
 // FUNÇÕES ALUNO
 struct aluno* getAluno(){
@@ -50,23 +54,21 @@ void imprimirDadosAluno(){
 
 // FUNÇÕES FILA
 struct fila {
-    struct nodo **nodos;
+    struct nodo **nodos; // vetor de ponteiros para os nodos
     uint32_t tamanho;
 }
 
 // Aloca dinâmicamente a fila e os nodos e seta o tamanho para 0
-struct fila *fila_criar(uint32_t tamanho) {
+struct fila *filaCriar(uint32_t tamanho) {
     struct fila *fila = malloc(sizeof(struct fila));
     if(!fila) {
         matarProgramaFaltaMemoria();
-        exit(1);
     }
 
     fila->nodos = malloc(tamanho * sizeof(struct nodo*));
     if(!fila->nodos) {
         free(fila);
         matarProgramaFaltaMemoria();
-        exit(1);
     }
 
     fila->tamanho = 0;
@@ -74,29 +76,50 @@ struct fila *fila_criar(uint32_t tamanho) {
     return fila;
 }
 
+// Adiciona o nodo no final da fila
 void enfileirar(struct fila *fila, struct nodo *nodo, uint32_t tamanho) {
     if(!fila || !nodo) {
-        printf("Ponteiros nulos.\n");
-        exit(1);
+        matarProgramaPonteiroNulo();
     }
 
     if(fila->tamanho == tamanho) {
-        printf("Capacidade da fila estrapolado\n");
-        exit(1);
+        printf("Capacidade da fila atingido\n");
+        return;
     }
 
     fila->nodos[fila->tamanho] = nodo;
     fila->tamanho++;
 }
 
+// Remove o primeiro item da fila e o retorna
+struct nodo *filaRemove(struct fila *fila) {
+    if(!fila) {
+        matarProgramaPonteiroNulo();
+    }
+
+    if(!fila->tamanho) {
+        printf("Fila vazia.\n");
+        return NULL;
+    }
+
+    struct nodo *retirado = fila->nodos[0];
+
+    for(size_t i = 1; i < fila->tamanho; i++) {
+        fila->nodos[i - 1] = fila->nodos[i];
+    }
+
+    fila->tamanho--;
+
+    return retirado;
+}
+
 //FUNÇÕES RED BLACK
 
-void inicia_sentinela() {
+void iniciaSentinela() {
     if (sentinela == NULL) {
         sentinela = malloc(sizeof(struct nodo));
         if (!sentinela) {
             matarProgramaFaltaMemoria();
-            exit(1);
         }
     }
 
@@ -107,11 +130,10 @@ void inicia_sentinela() {
     sentinela->pai = sentinela;
 }
 
-struct nodo *cria_nodo(int valor) {
+struct nodo *criaNodo(int valor) {
     struct nodo *nodo = malloc(sizeof(struct nodo));
     if (!nodo) {
         matarProgramaFaltaMemoria();
-        exit(1);
     }
 
     nodo->chave = valor;
@@ -126,8 +148,7 @@ struct nodo *cria_nodo(int valor) {
 // Subárvore nodoB toma o lugar da subárvore nodoA
 void transplante(struct nodo *raiz, struct nodo *nodoA, struct nodo *nodoB) {
     if (!raiz || !nodoA || !nodoB) {
-        printf("Ponteiros nulos\n");
-        exit(1);
+        matarProgramaPonteiroNulo();
     }
 
     if (nodoA->pai == sentinela) {
@@ -143,10 +164,9 @@ void transplante(struct nodo *raiz, struct nodo *nodoA, struct nodo *nodoB) {
 }
 
 // o nodo x é rotacionado a esquerda
-void rotacao_esquerda(struct nodo **raiz, struct nodo *nodo) {
+void rotacaoEsquerda(struct nodo **raiz, struct nodo *nodo) {
     if (!*raiz || !nodo) {
-        printf("Ponteiro nulo\n");
-        exit(1);
+        matarProgramaPonteiroNulo();
     }
     
     // Verifica se o filho do nodo é sentinela
@@ -176,11 +196,10 @@ void rotacao_esquerda(struct nodo **raiz, struct nodo *nodo) {
 }
 
 // o nodo x é rotacionado a direita
-void rotacao_direita(struct nodo **raiz, struct nodo *nodo) {
+void rotacaoDireita(struct nodo **raiz, struct nodo *nodo) {
     // Verificação de ponteiros
     if (!*raiz || !nodo) {
-        printf("Ponteiro nulo\n");
-        exit(1);
+        matarProgramaPonteiroNulo();
     }
     
     // Verifica se o filho do nodo é sentinela
@@ -213,8 +232,11 @@ void rotacao_direita(struct nodo **raiz, struct nodo *nodo) {
 }
 
 // // Altera a árvore para manter as características da Red Black após uma inserção
-void insere_fix(struct nodo **raiz, struct nodo *nodo) {
+void insereFix(struct nodo **raiz, struct nodo *nodo) {
     // Verifica ponteiros
+    if(!*raiz || !nodo) {
+        matarProgramaPonteiroNulo();
+    }
 
     while (nodo->pai->cor) {
         // O pai do nodo inserido é um filho esquerdo
@@ -228,7 +250,7 @@ void insere_fix(struct nodo **raiz, struct nodo *nodo) {
             } else {
                 if (nodo == nodo->pai->fd) {
                     nodo = nodo->pai;
-                    rotacao_esquerda(raiz, nodo);
+                    rotacaoEsquerda(raiz, nodo);
                 }
             }
         // O pai do nodo inserido é um filho direito
@@ -242,7 +264,7 @@ void insere_fix(struct nodo **raiz, struct nodo *nodo) {
             } else {
                 if (nodo == nodo->pai->fe) {
                     nodo = nodo->pai;
-                    rotacao_direita(raiz, nodo);
+                    rotacaoDireita(raiz, nodo);
                 }
             }
         }
@@ -251,14 +273,12 @@ void insere_fix(struct nodo **raiz, struct nodo *nodo) {
 }
 
 // Altera a árvore para manter as características da Red Black após uma exclusão
-void delete_fix(struct nodo *raiz, struct nodo *nodo) {
+void deleteFix(struct nodo *raiz, struct nodo *nodo) {
     // Verificação dos ponteiros
     if (!raiz || !nodo) {
-        printf("Ponteiros nulos\n");
-        exit(1);
+        matarProgramaPonteiroNulo();
     }
     
-
     while (nodo != raiz && !nodo->cor) {
         struct nodo *aux;
         // O nodo é um filho esquerdo
@@ -267,7 +287,7 @@ void delete_fix(struct nodo *raiz, struct nodo *nodo) {
             if (aux->cor) {
                 aux->cor = 0;
                 nodo->pai->cor = 1;
-                rotacao_esquerda(raiz, nodo->pai);
+                rotacaoEsquerda(raiz, nodo->pai);
                 aux = nodo->pai;
             }
 
@@ -278,27 +298,24 @@ void delete_fix(struct nodo *raiz, struct nodo *nodo) {
                 if (!aux->fd->cor) {
                     aux->fe->cor = 0;
                     aux->cor = 1;
-                    rotacao_direita(raiz, aux);
+                    rotacaoDireita(raiz, aux);
                     aux = nodo->pai->fd;
                 }
 
                 aux->cor = nodo->pai->cor;
                 nodo->pai->cor = 0;
                 aux->fd->cor = 0;
-                rotacao_esquerda(raiz, aux->pai);
+                rotacaoEsquerda(raiz, aux->pai);
                 nodo = raiz;
             }     
         }
-
-        // O mesmo, porém o contrário
-
         // Nodo é um filho direito
         if (nodo == nodo->pai->fd) {
             aux = nodo->pai->fe;
             if (aux->cor) {
                 aux->cor = 0;
                 nodo->pai->cor = 1;
-                rotacao_direita(raiz, nodo->pai);
+                rotacaoDireita(raiz, nodo->pai);
                 aux = nodo->pai;
             }
 
@@ -309,14 +326,14 @@ void delete_fix(struct nodo *raiz, struct nodo *nodo) {
                 if (!aux->fe->cor) {
                     aux->fd->cor = 0;
                     aux->cor = 1;
-                    rotacao_esquerda(raiz, aux);
+                    rotacaoEsquerda(raiz, aux);
                     aux = nodo->pai->fe;
                 }
 
                 aux->cor = nodo->pai->cor;
                 nodo->pai->cor = 0;
                 aux->fe->cor = 0;
-                rotacao_direita(raiz, aux->pai);
+                rotacaoDireita(raiz, aux->pai);
                 nodo = raiz;
             }
         }
@@ -326,14 +343,17 @@ void delete_fix(struct nodo *raiz, struct nodo *nodo) {
 
 //retorna SENTINELA se não foi possível inserir
 struct nodo* inserir(struct nodo** raiz, int chave) {
-    
+    if(!*raiz) {
+        matarProgramaPonteiroNulo();
+    }
+
     // Não pode inserir uma chave duplicada
     if(buscar(raiz, chave) != sentinela) {
         printf("Chave repetida.\n");
         return sentinela;
     }
     
-    struct nodo *novo_nodo = cria_nodo(chave);
+    struct nodo *novo_nodo = criaNodo(chave);
     struct nodo *x = *raiz;
     struct nodo *y = sentinela;
 
@@ -356,17 +376,21 @@ struct nodo* inserir(struct nodo** raiz, int chave) {
             y->fd = novo_nodo;
         }
     }
-    insere_fix(raiz, novo_nodo);
+    insereFix(raiz, novo_nodo);
 
     return NULL;
+}
+
+
+struct nodo *minimo(struct nodo *raiz) {
+
 }
 
 // retorna o número de nodos excluídos
 int excluir(struct nodo** raiz, int chave) {
     // Verificação de ponteiros
     if (!*raiz) {
-        printf("Ponteiro nulo\n");
-        exit(1);
+        matarProgramaPonteiroNulo();
     }
 
     struct nodo *remover = buscar(raiz, chave);
@@ -404,7 +428,7 @@ int excluir(struct nodo** raiz, int chave) {
             }
         }
         if (!corOg) {
-            delete_fix(raiz, temp);
+            deleteFix(raiz, temp);
         }
     }
     removidos++;
@@ -414,8 +438,7 @@ int excluir(struct nodo** raiz, int chave) {
 // //retorna SENTINELA se não existe
 struct nodo* buscar(struct nodo* nodo, int chave) {
     if (!nodo) {
-        printf("Ponteiro nulo\n");
-        exit(1);
+        matarProgramaPonteiroNulo();
     }
     
     if (nodo == sentinela || nodo->chave == chave) {
@@ -441,15 +464,14 @@ void imprimirEmOrdem(struct nodo* nodo) {
 
 void imprimirEmLargura(struct nodo* raiz) {
     if(!raiz) {
-        printf("Ponteiro nulo\n");
-        exit(1);
+        matarProgramaPonteiroNulo();
     }
 
-    criar_fila();
+    struct fila *fila = criarFila();
 
     enfileirar(fila, r);
-    while(fila_tamanho(fila) > 0) {
-        struct nodo *nodo = fila_remove(fila);
+    while(fila->tamanho > 0) {
+        struct nodo *nodo = filaRemove(fila);
         printf("Chave: %d.\n", nodo->chave);
 
         if(nodo->fe != sentinela) {

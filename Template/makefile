@@ -3,11 +3,8 @@ nomePrograma=trab
 
 all: $(nomePrograma)
 
-$(nomePrograma): testes.o redblack.o
-	gcc -o $(nomePrograma) testes.o redblack.o $(parametrosCompilacao)
-
-testes.o: testes.c
-	gcc -c testes.c $(parametrosCompilacao)
+$(nomePrograma): redblack.o
+	gcc -o $(nomePrograma) redblack.o $(parametrosCompilacao)
 
 redblack.o: redblack.h redblack.c
 	gcc -c redblack.c $(parametrosCompilacao)
