@@ -77,7 +77,7 @@ struct nodo *criaNodo(int valor) {
     }
 
     nodo->chave = valor;
-    nodo->cor = 0;
+    nodo->cor = 1;
     nodo->fd = sentinela;
     nodo->fe = sentinela;
     nodo->pai = sentinela;   
@@ -419,6 +419,65 @@ uint32_t contarElementos(struct nodo *raiz) {
     return 1 + contarElementos(raiz->fe) + contarElementos(raiz->fd);
 }
 
+// FUNÇÕES FILA
+struct fila {
+    struct nodo **nodos; // vetor de ponteiros para os nodos
+    uint32_t tamanho;
+};
+
+// Aloca dinâmicamente a fila e os nodos e seta o tamanho para 0
+struct fila *filaCriar(uint32_t tamanho) {
+    struct fila *fila = malloc(sizeof(struct fila));
+    if(!fila) {
+        matarProgramaPonteiroNulo();
+    }
+
+    fila->nodos = malloc(tamanho * sizeof(struct nodo*));
+    if(!fila->nodos) {
+        free(fila);
+        matarProgramaFaltaMemoria();
+    }
+
+    fila->tamanho = 0;
+    return fila;
+}
+
+// Adiciona o nodo no final da fila
+void enfileirar(struct fila *fila, struct nodo *nodo, uint32_t tamanho) {
+    if(!fila || !nodo) {
+        matarProgramaPonteiroNulo();
+    }
+
+    if(fila->tamanho == tamanho) {
+        printf("Capacidade da fila atingido\n");
+        return;
+    }
+
+    fila->nodos[fila->tamanho] = nodo;
+    fila->tamanho++;
+}
+
+// Remove o primeiro item da fila e o retorna
+struct nodo *filaRemove(struct fila *fila) {
+    if(!fila) {
+        matarProgramaPonteiroNulo();
+    }
+
+    if(!fila->tamanho) {
+        printf("Fila vazia.\n");
+        return NULL;
+    }
+
+    struct nodo *retirado = fila->nodos[0];
+
+    for(size_t i = 1; i < fila->tamanho; i++) {
+        fila->nodos[i - 1] = fila->nodos[i];
+    }
+
+    fila->tamanho--;
+    return retirado;
+}
+
 void imprimirEmLargura(struct nodo* raiz) {
     if(!raiz) {
         matarProgramaPonteiroNulo();
@@ -433,7 +492,12 @@ void imprimirEmLargura(struct nodo* raiz) {
     while(fila->tamanho > 0) {
         struct nodo *nodo = filaRemove(fila);
         printf("Chave: %d.\n", nodo->chave);
-
+        if (nodo->cor) {
+            printf("Cor: vermelho\n.");
+        } else {
+            printf("Cor: preto.\n");
+        }
+        
         if(nodo->fe != sentinela) {
             enfileirar(fila, nodo->fe, tamanho);
         }

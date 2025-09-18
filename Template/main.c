@@ -38,9 +38,12 @@ int main(){
 	while(op != 'f'){
 		switch (op) {
 			case 'i':
+				printf("Insira o valor a ser adicionado: ");
 				scanf("%d", &val);
 				if(!inserir(&raiz, val))
 					fprintf(stderr,"Falha ao inserir.\n");
+				else 
+					printf("Operação realizada com sucesso.\n");
 				break;
 			case 'r':
 				scanf("%d", &val);
@@ -65,6 +68,7 @@ int main(){
 			default:
 				fprintf(stderr,"Opcao Invalida %d", (int)op);
 		}
+		printf("Insira a operação a ser realizada: ");
 		scanf(" %c", &op);
 	}
 
