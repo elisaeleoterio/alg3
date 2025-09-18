@@ -27,6 +27,7 @@ int main(){
 
 	imprimirDadosAluno();
 
+	inicia_sentinela();
 	struct nodo* raiz = sentinela;
 
 	char op;
@@ -40,23 +41,23 @@ int main(){
 				scanf("%d", &val);
 				if(!inserir(&raiz, val))
 					fprintf(stderr,"Falha ao inserir.\n");
-					break;
+				break;
 			case 'r':
-			scanf("%d", &val);
-			if(!excluir(&raiz, val))
-			fprintf(stderr,"Falha ao remover %d.\n", val);
+				scanf("%d", &val);
+				if(!excluir(&raiz, val))
+					fprintf(stderr,"Falha ao remover %d.\n", val);
 				break;
 			case 'e':
 				imprimirEmOrdem(raiz);
 				puts("\n");
 				break;
 			case 'l':
-				imprimirEmLargura(raiz, true);
+				imprimirEmLargura(raiz);
 				break;
 				case 'b':
 				scanf("%d", &val);
 				struct nodo* valB = buscar(raiz, val);
-				if(valB != &sentinela)
+				if(valB != sentinela)
 					printf("Encontrado %d\n", valB->chave);
 				else
 				printf("Nao encontrado %d.\n", val);

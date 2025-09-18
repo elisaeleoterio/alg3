@@ -6,7 +6,7 @@
 #include <stdint.h>
 
 
-// FUNÇÕES DE VERIFICAÇÃO
+// FUNÇÕES DE ERRO
 void matarProgramaFaltaMemoria() {
     fprintf(stderr, "Erro por falta de memória\n");
     exit(1);
@@ -51,67 +51,6 @@ void imprimirDadosAluno(){
     free(aluno);
 
     return;
-}
-
-// FUNÇÕES FILA
-struct fila {
-    struct nodo **nodos; // vetor de ponteiros para os nodos
-    uint32_t tamanho;
-};
-
-// Aloca dinâmicamente a fila e os nodos e seta o tamanho para 0
-struct fila *filaCriar(uint32_t tamanho) {
-    struct fila *fila = malloc(sizeof(struct fila));
-    if(!fila) {
-        matarProgramaFaltaMemoria();
-    }
-
-    fila->nodos = malloc(tamanho * sizeof(struct nodo*));
-    if(!fila->nodos) {
-        free(fila);
-        matarProgramaFaltaMemoria();
-    }
-
-    fila->tamanho = 0;
-
-    return fila;
-}
-
-// Adiciona o nodo no final da fila
-void enfileirar(struct fila *fila, struct nodo *nodo, uint32_t tamanho) {
-    if(!fila || !nodo) {
-        matarProgramaPonteiroNulo();
-    }
-
-    if(fila->tamanho == tamanho) {
-        printf("Capacidade da fila atingido\n");
-        return;
-    }
-
-    fila->nodos[fila->tamanho] = nodo;
-    fila->tamanho++;
-}
-
-// Remove o primeiro item da fila e o retorna
-struct nodo *filaRemove(struct fila *fila) {
-    if(!fila) {
-        matarProgramaPonteiroNulo();
-    }
-
-    if(!fila->tamanho) {
-        printf("Fila vazia.\n");
-        return NULL;
-    }
-
-    struct nodo *retirado = fila->nodos[0];
-
-    for(size_t i = 1; i < fila->tamanho; i++) {
-        fila->nodos[i - 1] = fila->nodos[i];
-    }
-
-    fila->tamanho--;
-
-    return retirado;
 }
 
 //FUNÇÕES RED BLACK
@@ -378,8 +317,7 @@ struct nodo* inserir(struct nodo **raiz, int chave) {
         }
     }
     insereFix(raiz, novo_nodo);
-
-    return NULL;
+    return novo_nodo;
 }
 
 
@@ -474,7 +412,7 @@ void imprimirEmOrdem(struct nodo* nodo) {
 }
 
 uint32_t contarElementos(struct nodo *raiz) {
-    if(raiz != sentinela) {
+    if(raiz == sentinela) {
         return 0;
     }
 
@@ -485,8 +423,10 @@ void imprimirEmLargura(struct nodo* raiz) {
     if(!raiz) {
         matarProgramaPonteiroNulo();
     }
-
+    
     uint32_t tamanho = contarElementos(raiz);
+    printf("Tamanho: %d\n", tamanho);
+
     struct fila *fila = filaCriar(tamanho);
 
     enfileirar(fila, raiz, tamanho);
