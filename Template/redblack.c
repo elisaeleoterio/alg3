@@ -181,7 +181,7 @@ void insereFix(struct nodo **raiz, struct nodo *nodo) {
     while (nodo->pai->cor) {
         // O pai do nodo inserido é um filho esquerdo
         if (nodo->pai == nodo->pai->pai->fe) {
-            struct nodo *tio = nodo->pai->pai->fd;
+            struct nodo *tio = nodo->pai->pai->fd; 
             if (tio->cor) {
                 nodo->pai->cor = 0;
                 tio->cor = 0;
@@ -192,6 +192,9 @@ void insereFix(struct nodo **raiz, struct nodo *nodo) {
                     nodo = nodo->pai;
                     rotacaoEsquerda(raiz, nodo);
                 }
+                nodo->pai->cor = 0;
+                nodo->pai->pai->cor = 1;
+                rotacaoDireita(raiz, nodo->pai->pai);
             }
         // O pai do nodo inserido é um filho direito
         } else {
@@ -206,6 +209,9 @@ void insereFix(struct nodo **raiz, struct nodo *nodo) {
                     nodo = nodo->pai;
                     rotacaoDireita(raiz, nodo);
                 }
+                nodo->pai->cor = 0;
+                nodo->pai->pai->cor = 1;
+                rotacaoEsquerda(raiz, nodo->pai->pai);
             }
         }
     }
