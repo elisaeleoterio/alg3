@@ -74,3 +74,6 @@ int main(){
 
 	return 0;
 }
+
+
+// 	int numExcluido += excluir(raiz, chave);

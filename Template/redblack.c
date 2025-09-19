@@ -85,7 +85,7 @@ struct nodo *criaNodo(int valor) {
     return nodo;
 }
 
-// Subárvore nodoB toma o lugar da subárvore nodoA
+// Subárvore nodoB toma o lugar da subárvore nodoA (nodoA continua a apontar para nodoA->pai)
 void transplante(struct nodo *raiz, struct nodo *nodoA, struct nodo *nodoB) {
     if (!raiz || !nodoA || !nodoB) {
         matarProgramaPonteiroNulo();
@@ -100,6 +100,7 @@ void transplante(struct nodo *raiz, struct nodo *nodoA, struct nodo *nodoB) {
            nodoA->pai->fd = nodoB;
         }      
     }
+    // SENTINELA PAI PODE APONTAR PARA QUALQUER COISA?
     nodoB->pai = nodoA->pai;
 }
 
@@ -109,12 +110,13 @@ void rotacaoEsquerda(struct nodo **raiz, struct nodo *nodo) {
         matarProgramaPonteiroNulo();
     }
     
-    // Verifica se o filho do nodo é sentinela
-    if (nodo->fd == sentinela) {
-        printf("Nodo é sentinela\n");
-        exit(1);
-    }
+    // // Verifica se o filho do nodo é sentinela
+    // if (nodo->fd == sentinela) {
+    //     printf("Nodo é sentinela\n");
+    //     exit(1);
+    // }
     
+    printf("kkkk\n");
     struct nodo *aux = nodo->fd;
     nodo->fd = aux->fe;
 
@@ -142,12 +144,13 @@ void rotacaoDireita(struct nodo **raiz, struct nodo *nodo) {
         matarProgramaPonteiroNulo();
     }
     
-    // Verifica se o filho do nodo é sentinela
-    if (nodo->fe == sentinela) {
-        printf("Nodo é sentinela\n");
-        exit(1);
-    }
+    // // Verifica se o filho do nodo é sentinela
+    // if (nodo->fe == sentinela) {
+    //     printf("Nodo é sentinela\n");
+    //     exit(1);
+    // }
 
+    printf("kkkddd\n");
     struct nodo *aux = nodo->fe;
     nodo->fe = aux->fd;
     if (aux->fd != sentinela) {
@@ -340,7 +343,7 @@ struct nodo *minimo(struct nodo *raiz) {
     return min;
 }
 
-// retorna o número de nodos excluídos
+// retorna o número de nodos excluídos //  NÃO ENTENDI PQ
 int excluir(struct nodo** raiz, int chave) {
     // Verificação de ponteiros
     if (!*raiz) {
@@ -351,7 +354,7 @@ int excluir(struct nodo** raiz, int chave) {
     int removidos = 0;
 
     // equanto houver um nodo com essa chave (a busca não retorna o sentinela)
-    while (remover->cor != -1) {
+    while (remover != sentinela) {
         struct nodo *aux = remover;
     
         int corOg = aux->cor;
