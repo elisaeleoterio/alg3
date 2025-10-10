@@ -1,6 +1,6 @@
-#include "trataErro.c"
+#include "trataErro.h"
 #include "redblack.h"
-#include "fila.c"
+#include "fila.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -14,9 +14,13 @@ PERGUNTAS:
 2. O sentinela->pai pode apontar para qualquer lugar ou deve ser para outro sentinela?
 3. Ao excluir, preciso retornar um inteiro que é a quantidade de nodos excluidos, mas 
 não posso adicionar nodos com valores repetidos, então sempre retorno 0 ou 1, certo?
+4. Posso adicionar função ao redblack.h?
+5. Como que faz a formatação do Imprimir em largura??
 */
 
 //implementação das FUNÇÕES RED BLACK
+
+// FUNÇÕES AUXILIARES
 
 // Aloca dinâmicamente um nodo e o retorna
 struct nodo *criaNodo(int valor) {
@@ -24,7 +28,7 @@ struct nodo *criaNodo(int valor) {
     if (!nodo) {
         matarProgramaFaltaMemoria();
     }
-
+    
     nodo->chave = valor;
     nodo->cor = 1;
     nodo->fd = sentinela;
@@ -32,6 +36,14 @@ struct nodo *criaNodo(int valor) {
     nodo->pai = sentinela;   
     
     return nodo;
+}
+
+uint32_t contarElementos(struct nodo *raiz) {
+    if(raiz == sentinela) {
+        return 0;
+    }
+
+    return 1 + contarElementos(raiz->fe) + contarElementos(raiz->fd);
 }
 
 // Subárvore nodoB toma o lugar da subárvore nodoA (nodoA continua a apontar para nodoA->pai)
@@ -228,6 +240,21 @@ void deleteFix(struct nodo **raiz, struct nodo *nodo) {
     nodo->cor = 0;
 }
 
+struct nodo *minimo(struct nodo *raiz) {
+    if (!raiz) {
+        matarProgramaPonteiroNulo();
+    }
+    
+    struct nodo *min = raiz;
+    while(min->fe != sentinela) {
+        min = min->fe;
+    }
+
+    return min;
+}
+
+// FUNÇÕES DE OPERAÇÃO DA ÁRVORE RED BLACK
+
 //retorna SENTINELA se não foi possível inserir
 struct nodo* inserir(struct nodo **raiz, int chave) {
     if(!*raiz) {
@@ -236,7 +263,7 @@ struct nodo* inserir(struct nodo **raiz, int chave) {
 
     // Não pode inserir uma chave duplicada
     if(buscar(*raiz, chave) != sentinela) {
-        printf("Chave repetida.\n");
+        printf("Falha ao inserir.\n");
         return sentinela;
     }
     
@@ -268,18 +295,6 @@ struct nodo* inserir(struct nodo **raiz, int chave) {
 }
 
 
-struct nodo *minimo(struct nodo *raiz) {
-    if (!raiz) {
-        matarProgramaPonteiroNulo();
-    }
-    
-    struct nodo *min = raiz;
-    while(min->fe != sentinela) {
-        min = min->fe;
-    }
-
-    return min;
-}
 
 // retorna o número de nodos excluídos
 int excluir(struct nodo **raiz, int chave) {
@@ -353,19 +368,10 @@ struct nodo* buscar(struct nodo* nodo, int chave) {
 void imprimirEmOrdem(struct nodo* nodo) {
     if (nodo != sentinela) {
         imprimirEmOrdem(nodo->fe);
-        printf("Chave: %d.\n", nodo->chave);
+        printf("%d ", nodo->chave);
         imprimirEmOrdem(nodo->fd);
     }
 }
-
-uint32_t contarElementos(struct nodo *raiz) {
-    if(raiz == sentinela) {
-        return 0;
-    }
-
-    return 1 + contarElementos(raiz->fe) + contarElementos(raiz->fd);
-}
-
 
 void imprimirEmLargura(struct nodo* raiz) {
     if(!raiz) {
@@ -373,19 +379,18 @@ void imprimirEmLargura(struct nodo* raiz) {
     }
     
     uint32_t tamanho = contarElementos(raiz);
-    printf("Tamanho: %d\n", tamanho);
 
     struct fila *fila = filaCriar(tamanho);
 
     enfileirar(fila, raiz, tamanho);
     while(fila->tamanho > 0) {
         struct nodo *nodo = filaRemove(fila);
-        printf("Chave: %d.\n", nodo->chave);
         if (nodo->cor) {
-            printf("Cor: vermelho\n.");
+            printf("(R)%d", nodo->chave);
         } else {
-            printf("Cor: preto.\n");
+            printf("(B)%d", nodo->chave);
         }
+        printf(" ");
         
         if(nodo->fe != sentinela) {
             enfileirar(fila, nodo->fe, tamanho);
@@ -395,4 +400,6 @@ void imprimirEmLargura(struct nodo* raiz) {
             enfileirar(fila, nodo->fd, tamanho);
         }
     }
+    printf("\n");
+    fila = filaLibera(fila);
 }

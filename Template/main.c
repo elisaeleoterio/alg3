@@ -2,22 +2,35 @@
 #include <stdlib.h>
 
 #include "redblack.h"
-
+#include "trataErro.h"
 
 // Declaração da variável global do SENTINELA
 struct nodo *sentinela = NULL;
+void iniciaSentinela() {
+    if (sentinela == NULL) {
+        sentinela = malloc(sizeof(struct nodo));
+        if (!sentinela) {
+            matarProgramaFaltaMemoria();
+        }
+    }
+
+    sentinela->chave = -1;
+    sentinela->cor = 0;
+    sentinela->fd = sentinela;
+    sentinela->fe = sentinela;
+    sentinela->pai = sentinela;
+}
 
 int main(){
 
 	imprimirDadosAluno();
 
-	inicia_sentinela();
+	iniciaSentinela();
 	struct nodo* raiz = sentinela;
 
 	char op;
 	int val;
 
-	printf("Insira a operação a ser realizada: ");
 	scanf("%c", &op);
 	while(op != 'f'){
 		switch (op) {
@@ -49,7 +62,6 @@ int main(){
 			default:
 				fprintf(stderr,"Opcao Invalida %d", (int)op);
 		}
-		printf("Insira a operação a ser realizada: ");
 		scanf(" %c", &op);
 	}
 

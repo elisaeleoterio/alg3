@@ -19,3 +19,5 @@ void enfileirar(struct fila *fila, struct nodo *nodo, uint32_t tamanho);
 
 // Remove o primeiro item da fila e o retorna
 struct nodo *filaRemove(struct fila *fila);
+
+struct fila *filaLibera(struct fila *fila);

@@ -5,7 +5,7 @@ OBJ = main.o redblack.o fila.o trataErro.o aluno.o
 all: $(nomePrograma)
 
 $(nomePrograma): $(OBJ)
-	gcc $(nomePrograma) -o $(parametrosCompilacao) $(OBJ)
+	gcc -o $(nomePrograma) $(parametrosCompilacao) $(OBJ)
 
 main.o: main.c redblack.h
 	gcc -c main.c $(parametrosCompilacao)

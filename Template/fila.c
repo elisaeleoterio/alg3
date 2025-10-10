@@ -61,3 +61,14 @@ struct nodo *filaRemove(struct fila *fila) {
     fila->tamanho--;
     return retirado;
 }
+
+struct fila *filaLibera(struct fila *fila) {
+    if (!fila) {
+        return fila;
+    }
+
+    free(fila->nodos);
+    free(fila);
+
+    return NULL; 
+}
