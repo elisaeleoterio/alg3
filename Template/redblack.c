@@ -52,12 +52,7 @@ void imprimirDadosAluno(){
     return;
 }
 
-/*
-PERGUNTAS:
-5. Como que faz a formatação do Imprimir em largura??
-*/
-
-//implementação das FUNÇÕES RED BLACK
+//FUNÇÕES RED BLACK
 
 // FUNÇÕES AUXILIARES
 
@@ -412,7 +407,6 @@ void imprimirEmOrdem(struct nodo* nodo) {
     }
 }
 
-
 // FUNÇÕES IMPLEMENAÇÃO DA FILA PARA IMPRIMIR
 
 // Estrutura FILA
@@ -487,7 +481,7 @@ struct fila *filaLibera(struct fila *fila) {
 
 // FILA PARA CONTABILIZAR O NÍVEL
 struct filaNivel {
-    uint32_t **nivel; // vetor de ponteiros para os níveis
+    int32_t *nivel; // vetor de ponteiros para os níveis
     uint32_t tamanho;
 };
 
@@ -523,17 +517,17 @@ void enfileirarNivel(struct filaNivel *filaNiv, uint32_t nivel, uint32_t tamanho
 }
 
 // Remove o primeiro item da fila e o retorna
-struct filaNivel *filaRemoveNivel(struct filaNivel *filaNiv) {
+int32_t filaRemoveNivel(struct filaNivel *filaNiv) {
     if(!filaNiv) {
         matarProgramaPonteiroNulo();
     }
 
     if(!filaNiv->tamanho) {
         printf("Fila vazia.\n");
-        return NULL;
+        return -1;
     }
 
-    uint32_t *retirado = filaNiv->nivel[0];
+    int32_t retirado = filaNiv->nivel[0];
 
     for(size_t i = 1; i < filaNiv->tamanho; i++) {
         filaNiv->nivel[i - 1] = filaNiv->nivel[i];
@@ -571,36 +565,51 @@ void imprimirEmLargura(struct nodo* raiz) {
     }
     
     uint32_t tamanho = contarElementos(raiz);
-    uint32_t qtdNiveis = altura(raiz);
+    int32_t qtdNiveis = altura(raiz);
 
     struct fila *fila = filaCriar(tamanho);
     struct filaNivel *filaNiv = filaCriarNivel(qtdNiveis);
 
-    uint32_t nivel = 0;
+    int32_t nivel = 0;
 
     enfileirar(fila, raiz, tamanho);
     enfileirarNivel(filaNiv, nivel, qtdNiveis);
     while(fila->tamanho > 0) {
         struct nodo *nodo = filaRemove(fila);
-        printf("[%d]", filaRemoveNivel(filaNiv));
+        int32_t nivelNov = filaRemoveNivel(filaNiv);
+
+        // Quebra de linha ao mudar de nível, exceto antes do primeiro nível
+        if (nivelNov != nivel && nivelNov > 0) {
+            printf("\n");
+            nivel = nivelNov;
+        }
+        
+        printf("[%d]", nivelNov);
         if (nodo->cor) {
             printf("(R)%d", nodo->chave);
         } else {
             printf("(B)%d", nodo->chave);
         }
         printf(" ");
-        
+        if (nodo->pai == sentinela) {
+            printf("[QUALQUER]");
+        } else if (nodo->pai->fe) {
+            printf("[%de]", nodo->pai->chave);
+        } else if (nodo->pai->fd) {
+            printf("[%dd]", nodo->pai->chave);
+        }        
+
         if(nodo->fe != sentinela) {
             enfileirar(fila, nodo->fe, tamanho);
-            enfileirarNivel(filaNiv, nivel+1, qtdNiveis);
+            enfileirarNivel(filaNiv, nivelNov+1, qtdNiveis);
         }
 
         if(nodo->fd != sentinela) {
             enfileirar(fila, nodo->fd, tamanho);
-            enfileirarNivel(filaNiv, nivel+1, qtdNiveis);
+            enfileirarNivel(filaNiv, nivelNov+1, qtdNiveis);
         }
     }
-    printf("\n");
+
     fila = filaLibera(fila);
     filaNiv = filaLiberaNivel(filaNiv);
 }
