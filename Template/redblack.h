@@ -34,4 +34,7 @@ void imprimirEmOrdem(struct nodo* nodo);
 
 void imprimirEmLargura(struct nodo* raiz);
 
+void matarProgramaFaltaMemoria();
+void matarProgramaPonteiroNulo();
+
 #endif//REDBLACK_H

@@ -1,20 +1,59 @@
-#include "trataErro.h"
 #include "redblack.h"
-#include "fila.h"
 
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
 #include <stdint.h>
 
+// FUNÇÕES DE ERRO
+void matarProgramaFaltaMemoria() {
+    fprintf(stderr, "Erro por falta de memória\n");
+    exit(1);
+}
+
+void matarProgramaPonteiroNulo() {
+    fprintf(stderr, "Erro por ponteiro nulo\n");
+    exit(1);
+}
+
+// FUNÇÕES ALUNO
+struct aluno* getAluno(){
+    struct aluno* retorno = malloc(sizeof(struct aluno));
+    if(!retorno)
+        matarProgramaFaltaMemoria();
+
+    retorno->nome = malloc(sizeof("Elisa Rocha Eleotério"));//sizeof conta o \0
+	if(!retorno->nome)
+		matarProgramaFaltaMemoria();
+        
+    retorno->nomeDinf = malloc(sizeof("ere24"));
+    if(!retorno->nomeDinf) {
+        matarProgramaFaltaMemoria();
+    }
+    
+	strcpy(retorno->nome, "Elisa Rocha Eleotério");
+    strcpy(retorno->nomeDinf, "ere24");
+    retorno->grr = 20241731;
+
+	return retorno;
+}
+
+void imprimirDadosAluno(){
+    struct aluno* aluno = getAluno();
+    
+    printf("Trabalho de %s\n", aluno->nome);
+    printf("Login Dinf %s\n", aluno->nomeDinf);
+    printf("GRR %u\n\n", aluno->grr);
+
+    free(aluno->nome);
+    free(aluno->nomeDinf);
+    free(aluno);
+
+    return;
+}
 
 /*
 PERGUNTAS:
-1. Preciso imprimir o sentinela ao imprimir em Largura?
-2. O sentinela->pai pode apontar para qualquer lugar ou deve ser para outro sentinela?
-3. Ao excluir, preciso retornar um inteiro que é a quantidade de nodos excluidos, mas 
-não posso adicionar nodos com valores repetidos, então sempre retorno 0 ou 1, certo?
-4. Posso adicionar função ao redblack.h?
 5. Como que faz a formatação do Imprimir em largura??
 */
 
@@ -373,18 +412,177 @@ void imprimirEmOrdem(struct nodo* nodo) {
     }
 }
 
+
+// FUNÇÕES IMPLEMENAÇÃO DA FILA PARA IMPRIMIR
+
+// Estrutura FILA
+struct fila {
+    struct nodo **nodos; // vetor de ponteiros para os nodos
+    uint32_t tamanho;
+};
+
+// Aloca dinâmicamente a fila e os nodos e seta o tamanho para 0
+struct fila *filaCriar(uint32_t tamanho) {
+    struct fila *fila = malloc(sizeof(struct fila));
+    if(!fila) {
+        matarProgramaPonteiroNulo();
+    }
+
+    fila->nodos = malloc(tamanho * sizeof(struct nodo*));
+    if(!fila->nodos) {
+        free(fila);
+        matarProgramaFaltaMemoria();
+    }
+
+    fila->tamanho = 0;
+    return fila;
+}
+
+// Adiciona o nodo no final da fila
+void enfileirar(struct fila *fila, struct nodo *nodo, uint32_t tamanho) {
+    if(!fila || !nodo) {
+        matarProgramaPonteiroNulo();
+    }
+
+    if(fila->tamanho == tamanho) {
+        printf("Capacidade da fila atingido\n");
+        return;
+    }
+
+    fila->nodos[fila->tamanho] = nodo;
+    fila->tamanho++;
+}
+
+// Remove o primeiro item da fila e o retorna
+struct nodo *filaRemove(struct fila *fila) {
+    if(!fila) {
+        matarProgramaPonteiroNulo();
+    }
+
+    if(!fila->tamanho) {
+        printf("Fila vazia.\n");
+        return NULL;
+    }
+
+    struct nodo *retirado = fila->nodos[0];
+
+    for(size_t i = 1; i < fila->tamanho; i++) {
+        fila->nodos[i - 1] = fila->nodos[i];
+    }
+
+    fila->tamanho--;
+    return retirado;
+}
+
+struct fila *filaLibera(struct fila *fila) {
+    if (!fila) {
+        return fila;
+    }
+
+    free(fila->nodos);
+    free(fila);
+
+    return NULL; 
+}
+
+// FILA PARA CONTABILIZAR O NÍVEL
+struct filaNivel {
+    uint32_t **nivel; // vetor de ponteiros para os níveis
+    uint32_t tamanho;
+};
+
+struct filaNivel *filaCriarNivel(uint32_t tamanho) {
+    struct filaNivel *filaNiv = malloc(sizeof(struct filaNivel));
+    if(!filaNiv) {
+        matarProgramaPonteiroNulo();
+    }
+
+    filaNiv->nivel = malloc(tamanho * sizeof(struct nivel*));
+    if(!filaNiv->nivel) {
+        free(filaNiv);
+        matarProgramaFaltaMemoria();
+    }
+
+    filaNiv->tamanho = 0;
+    return filaNiv;
+}
+
+// Adiciona o nodo no final da fila
+void enfileirarNivel(struct filaNivel *filaNiv, uint32_t nivel, uint32_t tamanho) {
+    if(!filaNiv) {
+        matarProgramaPonteiroNulo();
+    }
+
+    if(filaNiv->tamanho == tamanho) {
+        printf("Capacidade da fila atingido\n");
+        return;
+    }
+
+    filaNiv->nivel[filaNiv->tamanho] = nivel;
+    filaNiv->tamanho++;
+}
+
+// Remove o primeiro item da fila e o retorna
+struct filaNivel *filaRemoveNivel(struct filaNivel *filaNiv) {
+    if(!filaNiv) {
+        matarProgramaPonteiroNulo();
+    }
+
+    if(!filaNiv->tamanho) {
+        printf("Fila vazia.\n");
+        return NULL;
+    }
+
+    uint32_t *retirado = filaNiv->nivel[0];
+
+    for(size_t i = 1; i < filaNiv->tamanho; i++) {
+        filaNiv->nivel[i - 1] = filaNiv->nivel[i];
+    }
+
+    filaNiv->tamanho--;
+    return retirado;
+}
+
+struct filaNivel *filaLiberaNivel(struct filaNivel *filaNiv) {
+    if (!filaNiv) {
+        return filaNiv;
+    }
+
+    free(filaNiv->nivel);
+    free(filaNiv);
+
+    return NULL; 
+}
+
+int altura(struct nodo *raiz) {
+    if (raiz == sentinela) {
+        return 0;
+    }
+    int altEsq = altura(raiz->fe);
+    int altDir = altura(raiz->fd);
+    return 1 + (altEsq > altDir ? altEsq : altDir);
+}
+
+// IMPRIMIR EM LARGURA
+
 void imprimirEmLargura(struct nodo* raiz) {
     if(!raiz) {
         matarProgramaPonteiroNulo();
     }
     
     uint32_t tamanho = contarElementos(raiz);
+    uint32_t qtdNiveis = altura(raiz);
 
     struct fila *fila = filaCriar(tamanho);
+    struct filaNivel *filaNiv = filaCriarNivel(qtdNiveis);
+
+    uint32_t nivel = 0;
 
     enfileirar(fila, raiz, tamanho);
+    enfileirarNivel(filaNiv, nivel, qtdNiveis);
     while(fila->tamanho > 0) {
         struct nodo *nodo = filaRemove(fila);
+        printf("[%d]", filaRemoveNivel(filaNiv));
         if (nodo->cor) {
             printf("(R)%d", nodo->chave);
         } else {
@@ -394,12 +592,15 @@ void imprimirEmLargura(struct nodo* raiz) {
         
         if(nodo->fe != sentinela) {
             enfileirar(fila, nodo->fe, tamanho);
+            enfileirarNivel(filaNiv, nivel+1, qtdNiveis);
         }
 
         if(nodo->fd != sentinela) {
             enfileirar(fila, nodo->fd, tamanho);
+            enfileirarNivel(filaNiv, nivel+1, qtdNiveis);
         }
     }
     printf("\n");
     fila = filaLibera(fila);
+    filaNiv = filaLiberaNivel(filaNiv);
 }

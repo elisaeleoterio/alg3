@@ -2,7 +2,6 @@
 #include <stdlib.h>
 
 #include "redblack.h"
-#include "trataErro.h"
 
 // Declaração da variável global do SENTINELA
 struct nodo *sentinela = NULL;

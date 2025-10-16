@@ -1,6 +1,6 @@
 parametrosCompilacao=-Wall -Wshadow -Wextra -g -std=c99
 nomePrograma=antesprova_20241731
-OBJ = main.o redblack.o fila.o trataErro.o aluno.o
+OBJ = main.o redblack.o
  
 all: $(nomePrograma)
 
@@ -12,12 +12,6 @@ main.o: main.c redblack.h
 	
 redblack.o: redblack.h redblack.c
 	gcc -c redblack.c $(parametrosCompilacao)
-
-fila.o: fila.c fila.h
-
-trataErro.o = trataErro.c trataErro.h
-
-aluno.o = aluno.c aluno.h
 
 clean:
 	rm -f *.o *.gch $(nomePrograma)
