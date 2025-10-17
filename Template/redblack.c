@@ -577,14 +577,18 @@ void imprimirEmLargura(struct nodo* raiz) {
     while(fila->tamanho > 0) {
         struct nodo *nodo = filaRemove(fila);
         int32_t nivelNov = filaRemoveNivel(filaNiv);
-
+        
         // Quebra de linha ao mudar de nível, exceto antes do primeiro nível
         if (nivelNov != nivel && nivelNov > 0) {
             printf("\n");
-            nivel = nivelNov;
         }
         
-        printf("[%d]", nivelNov);
+        if (nivelNov != nivel || nivelNov == 0) {
+            printf("[%d]", nivelNov);
+        }
+        
+        nivel = nivelNov;
+        
         if (nodo->cor) {
             printf("(R)%d", nodo->chave);
         } else {
@@ -593,9 +597,9 @@ void imprimirEmLargura(struct nodo* raiz) {
         printf(" ");
         if (nodo->pai == sentinela) {
             printf("[QUALQUER]");
-        } else if (nodo->pai->fe) {
+        } else if (nodo->pai->fe == nodo) {
             printf("[%de]", nodo->pai->chave);
-        } else if (nodo->pai->fd) {
+        } else if (nodo->pai->fd == nodo) {
             printf("[%dd]", nodo->pai->chave);
         }        
 
@@ -610,6 +614,7 @@ void imprimirEmLargura(struct nodo* raiz) {
         }
     }
 
+    printf("\n");
     fila = filaLibera(fila);
     filaNiv = filaLiberaNivel(filaNiv);
 }
