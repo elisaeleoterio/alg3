@@ -19,14 +19,16 @@ int main() {
 
    criar_kdtree(&raiz, n, k);
     
-    char op;
-    
-    scanf("%c", &op);
+   printf("Insira a operação a ser realizada:");
+    char op;    
+    scanf(" %c", &op);
 	while(op != 'f'){
 		switch (op) {
             case 'b': {// Realizar busca dos pontos enviados pelo usuário
                 // Ler pontos a buscar
+                printf("Ler Pontos: ");
                 double *vetchave = ler_pontos(k);
+                printf("Depois de ler pontos. \n");
                 struct nodo *busca = buscar_kdtree(raiz, vetchave, 0, k);
 				if(busca) {
                     printf("Encontrado. Classe %d.\n", busca->classe);
