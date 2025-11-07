@@ -1,17 +1,20 @@
 parametrosCompilacao=-Wall -Wshadow -Wextra -g -std=c99
 nomePrograma=prova4_20241731
-OBJ = main.o kdtree.o
+OBJ = main.o kdtree.o fila.o
  
 all: $(nomePrograma)
 
 $(nomePrograma): $(OBJ)
 	gcc -o $(nomePrograma) $(parametrosCompilacao) $(OBJ) -lm
 
-main.o: main.c kdtree.h
+main.o: main.c kdtree.h fila.h
 	gcc -c main.c $(parametrosCompilacao)
 	
 kdtree.o: kdtree.h kdtree.c
 	gcc -c kdtree.c $(parametrosCompilacao)
 
+fila.o: fila.h fila.c
+	gcc -c fila.c $(parametrosCompilacao)
+	
 clean:
 	rm -f *.o *.gch $(nomePrograma)

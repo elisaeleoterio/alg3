@@ -5,6 +5,7 @@
 #include <math.h>
 
 #include "kdtree.h"
+#include "fila.h"
 
 
 
@@ -31,10 +32,10 @@ struct nodo *criar_nodo(uint16_t classe, double *vetchave) {
 
 double *ler_pontos(uint16_t dimensoes) {
     double *vetchave = malloc(dimensoes * sizeof(double));
+    printf("Escreva as coordenadas.\n");
     for (size_t i = 0; i < dimensoes; i++) {
         scanf("%lf", &vetchave[i]);
     }
-    
     return vetchave;
 }
 
@@ -53,25 +54,35 @@ struct nodo *inserir(struct nodo **raiz, double *vetchave, uint16_t classe, uint
     
     // Criar novo nodo e atribuir suas características
     struct nodo *novo = criar_nodo(classe, vetchave);
-    
+    printf("Criou o nodo\n");
+    printf("Nodo vetchave[0]: %f\n", novo->vetchave[0]);
+
     // Estruturas auxiliares para definir local de inserção
     struct nodo *atual = *raiz;
     struct nodo *pai = NULL;
 
     // Loop para definir o pai do novo nodo
-    while (atual) {
+    while (atual->vetchave) {
+        printf("Entrou no while\n");
         pai = atual;
+        printf("Antes do if\n");
+        // Atual->vetchave[coord] pode ser nulo (raiz)
+        
         if (novo->vetchave[coord] < atual->vetchave[coord]) {
+            printf("Entrou no if\n");
             atual = atual->fe;
         } else {
+            printf("Entrou no else\n");
             atual = atual->fd;
         }
         coord = (coord + 1) % dimesoes;
+        printf("Coord: %d\n", coord);
     }
     novo->pai = pai;
 
     // Condições para definir qual filho (fe ou fd) o novo nodo é
-    if (!pai) {
+    if (pai->vetchave == NULL) {
+        printf("Entrou no if da raiz.\n");
         *raiz = novo;
     } else { 
         if (novo->vetchave[coord] < pai->vetchave[coord]) {
@@ -98,16 +109,19 @@ void criar_kdtree(struct nodo **raiz, uint16_t num_nodos, uint16_t dimensoes) {
         if (!vetchave) {
             matarProgramaFaltaMemoria();
         }
+
         // Ler todos os pontos do nodo
-        for (size_t j = 0; j < dimensoes; i++) {
-            scanf("%lf", &vetchave[j]);
-        }
+        vetchave = ler_pontos(dimensoes);
+
         // Ler classe
         uint16_t classe;
+        printf("Classe: ");
         scanf("%hd", &classe);
         
         // Inserir o vetor de pontos na árvore
-        inserir(raiz, vetchave, classe, dimensoes);        
+        printf("Antes do inserir\n");
+        inserir(raiz, vetchave, classe, dimensoes);
+        printf("Ponto %d lido.\n", i);      
     }
 }    
 
@@ -173,6 +187,39 @@ struct vizinho *encontrar_z_vizinhos(struct nodo *nodo, uint16_t coord, uint16_t
         }
     }
     return melhor;
+}
+
+void imprimir_em_largura(struct nodo *raiz, uint16_t num_nodos, uint16_t dimensoes) {
+    if(!raiz) {
+        matarProgramaPonteiroNulo();
+    }
+    
+    uint32_t tamanho = num_nodos;
+
+    struct fila *fila = fila_criar(tamanho);
+
+    enfileirar(fila, raiz, tamanho);
+    while(fila->tamanho > 0) {
+        struct nodo *nodo = fila_remove(fila);
+        for (int16_t i = 0; i < dimensoes; i++) {
+            printf("%f", nodo->vetchave[i]);
+            if (i < dimensoes - 1) {
+                printf(" ");
+            } 
+        }
+        
+
+        if(nodo->fe != NULL) {
+            enfileirar(fila, nodo->fe, tamanho);
+        }
+
+        if(nodo->fd != NULL) {
+            enfileirar(fila, nodo->fd, tamanho);
+        }
+    }
+
+    printf("\n");
+    fila = fila_libera(fila);
 }
 
 

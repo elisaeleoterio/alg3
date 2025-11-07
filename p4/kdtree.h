@@ -34,6 +34,7 @@ struct nodo *buscar_kdtree(struct nodo *raiz, double *vetchave, uint16_t coord, 
 // Encontra o vizinho mais próximo da coordenada passada
 struct vizinho *encontrar_z_vizinhos(struct nodo *raiz, uint16_t coord, uint16_t dimensoes, double 
                                     *vetchave, struct vizinho *melhor);
+void imprimir_em_largura(struct nodo *raiz, uint16_t num_nodos, uint16_t dimensoes);
 
 // Prtótipos de funções de erro
 // FUNÇÕES DE ERRO

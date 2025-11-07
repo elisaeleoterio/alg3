@@ -44,8 +44,8 @@ int main() {
 				break;
             }
 			case 'l': {
-				printf("imprimir_em_largura(raiz)");
-				break;
+                imprimir_em_largura(raiz, n, k);			
+                break;
             }
 			default: {
 				fprintf(stderr,"Opcao Inválida %d\n", (int)op);
