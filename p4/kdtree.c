@@ -6,6 +6,7 @@
 
 #include "kdtree.h"
 #include "fila.h"
+#include "max_heap.h"
 
 
 
@@ -144,10 +145,19 @@ struct nodo *buscar_kdtree(struct nodo *nodo, double *vetchave, uint16_t coord, 
     return buscar_kdtree(nodo->fd, vetchave, (coord + 1) % dimensoes, dimensoes);
 }
 
+
+// COLOCAR NA MAIN
+// // Alocação dinâmica do vetor que armazenará os z vizinhos mais próximos
+//     struct vizinhos *vizinhos = malloc(sizeof(struct vizinhos));
+//     if (!vizinhos) {
+//         matarProgramaFaltaMemoria();
+//     }
+//     vizinhos->melhores = malloc(z * sizeof(struct vizinho));
+//     vizinhos->quantidade = 0;
 // Retorna um vetor com os z vizinhos mais próximos
-struct vizinho **encontrar_z_vizinhos(struct nodo *nodo, uint16_t coord, uint16_t dimensoes, 
-                                    double *vetchave, struct vizinho **melhores) {
-    if (!nodo) {
+struct vizinhos *encontrar_z_vizinhos(struct nodo *nodo, uint16_t coord, uint16_t dimensoes, 
+                                    double *vetchave, struct vizinhos *vizinhos, uint32_t z) {
+    if (!nodo || !vetchave || !vizinhos) {
         matarProgramaPonteiroNulo();
     }
 
@@ -156,23 +166,18 @@ struct vizinho **encontrar_z_vizinhos(struct nodo *nodo, uint16_t coord, uint16_
         // Se estiver tirar o mais distante e subtituir pelo novo e ordenar novamente
         // Se não estiver cheio, adicionar no vetor
 
-    
     // Verifica se nodo é folha (sem filhos)
     if (nodo->fd == NULL && nodo->fe == NULL) {
         double distancia = distancia_euclidiana(nodo->vetchave, vetchave, dimensoes);
-        if (distancia < melhores[0]->distancia) {
-            struct vizinho *ret = malloc(sizeof(struct vizinho));
-            if (!ret) {
-                matarProgramaFaltaMemoria();
+        if (vizinhos->quantidade > 0) {
+            if (distancia < vizinhos->melhores[0]->distancia) {
+                adiciona_ordena(vizinhos, nodo, distancia, z);
             }
-            ret->distancia = distancia;
-            ret->nodo = nodo;
-            return ret;
-        } else {
-            return melhores;
         }
+        return vizinhos;
     }
 
+    // Define para qual lado da árvore irá continuar a procura
     struct nodo *prim, *sec;
     if (vetchave[coord] < nodo->vetchave[coord]) {
         prim = nodo->fe;
@@ -182,19 +187,42 @@ struct vizinho **encontrar_z_vizinhos(struct nodo *nodo, uint16_t coord, uint16_
         sec = nodo->fe;
     }
 
-    melhores = encontrar_z_vizinhos(prim, (coord + 1) % dimensoes, dimensoes, vetchave, melhores);
+    vizinhos = encontrar_z_vizinhos(prim, (coord + 1) % dimensoes, dimensoes, vetchave, vizinhos, z);
     double distancia = distancia_euclidiana(nodo->vetchave, vetchave, dimensoes);
-    if (distancia < melhores[0]->distancia) {
-        melhor->distancia = distancia;
-        melhor->nodo = nodo;
-    }
-    if (fabs(nodo->vetchave[coord] - vetchave[coord]) < melhor->distancia) {
-        struct vizinho *novo = encontrar_z_vizinhos(sec, (coord + 1) % dimensoes, dimensoes, vetchave, melhor);
-        if (novo->distancia < melhor->distancia) {
-            return novo;
+    if (vizinhos->quantidade < z) {
+        if (distancia < vizinhos->melhores[0]->distancia) {
+            adiciona_ordena(vizinhos, nodo, distancia, z);
         }
     }
-    return melhor;
+    
+    double dist_plano = nodo->vetchave[coord] - vetchave[coord];
+    double pior_dist = -1.0; // valor arbitrário para considerar como a do pior vizinho
+
+    // Atualiza a pior distância caso o vetor esteja cheio
+    if (vizinhos->quantidade == z) { // vetor de vizinhos está cheio
+        pior_dist = vizinhos->melhores[0]->distancia; 
+    }
+    
+
+    // Checar o outro lado da árvore quando ela não estiver cheia ou quando a distância do plano é menor que a pior distância
+    if (vizinhos->quantidade < z || dist_plano < pior_dist) {
+        encontrar_z_vizinhos(sec, (coord + 1) % dimensoes, dimensoes, vetchave, vizinhos, z);
+    }
+    
+    return vizinhos;
+}
+
+void adiciona_ordena(struct vizinhos *vizinhos, struct nodo *nodo, double distancia, uint32_t z) {
+    if (vizinhos->quantidade == z) { // Substituir o mais distante
+        vizinhos->melhores[0]->distancia = distancia;
+        vizinhos->melhores[0]->nodo = nodo;
+    } else { // adicionar no fim do vetor
+        vizinhos->melhores[vizinhos->quantidade]->distancia = distancia;
+        vizinhos->melhores[vizinhos->quantidade]->nodo = nodo;
+        vizinhos->quantidade++;
+    }
+    // ordenar
+    heapSort(vizinhos->melhores, vizinhos->quantidade); // Usei o heapsort para que o maior esteja sempre no primeiro item do vetor
 }
 
 void imprimir_em_largura(struct nodo *raiz, uint16_t num_nodos, uint16_t dimensoes) {

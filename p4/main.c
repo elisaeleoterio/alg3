@@ -40,7 +40,10 @@ int main() {
                 uint32_t z;
                 scanf("%d", &z);
                 double *vetchave = ler_pontos(k);
-                struct vizinhos **melhores =(struct vizinhos **) malloc(z * sizeof(struct vizinhos));
+                struct vizinhos **melhores = malloc(z * sizeof(struct vizinhos *));
+                if (!*melhores) {
+                    matarProgramaFaltaMemoria();
+                }
 				encontrar_z_vizinhos(raiz, 0, k, vetchave, melhores);
 				break;
             }

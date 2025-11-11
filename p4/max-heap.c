@@ -6,9 +6,9 @@
 #include "max_heap.h"
 
 // Heap Sort - Organiza o vetor de forma que esteja ordenado no estilo de uma Max-Heap
-uint64_t heapSort(struct vizinho **vetor, size_t tam) {
+void heapSort(struct vizinho **vetor, size_t tam) {
     if (tam <= 0)
-        return 0;
+        return;
 
     // Transoforma o vetor em um max heap
     makeMaxHeap(vetor, tam);

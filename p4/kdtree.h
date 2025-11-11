@@ -19,6 +19,11 @@ struct vizinho {
     struct nodo *nodo;
 };
 
+struct vizinhos {
+    uint16_t quantidade;
+    struct vizinho **melhores;
+};
+
 // Protótipos de funções opcionais
 struct nodo *criar_nodo(uint16_t classe, double *vetchave);
 double *ler_pontos(uint16_t dimensoes);
