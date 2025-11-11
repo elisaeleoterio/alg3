@@ -15,7 +15,7 @@
     - IDEIA: salvar todas as distâncias dos nodos em relação à coordenada, ordenar e retornar os z primeiros
 */
 
-// FUNÇÕES EXTRAS
+// FUNÇÕES AUXILIARES
 struct nodo *criar_nodo(uint16_t classe, double *vetchave) {
     struct nodo *nodo = malloc(sizeof(struct nodo));
     if (!nodo) {
@@ -65,7 +65,7 @@ struct nodo *inserir(struct nodo **raiz, double *vetchave, uint16_t classe, uint
     // Loop para definir o pai do novo nodo
     // Atual->vetchave[coord] pode ser nulo (raiz)
     while (atual && atual->vetchave) {
-        pai = atual;        
+        pai = atual;
         if (novo->vetchave[coord] < atual->vetchave[coord]) {
             atual = atual->fe;
         } else {
@@ -96,6 +96,7 @@ void criar_kdtree(struct nodo **raiz, uint16_t num_nodos, uint16_t dimensoes) {
         matarProgramaPonteiroNulo();
     }
     
+    printf("Insira os pontos.\n");
     //Ler todos os nodos
     for (int16_t i = 0; i < num_nodos; i++) {
         double *vetchave = malloc(dimensoes * sizeof(double));
@@ -121,8 +122,19 @@ struct nodo *buscar_kdtree(struct nodo *nodo, double *vetchave, uint16_t coord, 
         matarProgramaPonteiroNulo();
     }
     
-    if (!nodo || nodo->vetchave == NULL) {
-        printf("Nodo nulo");
+    if (!nodo) {
+        return nodo;
+    }
+
+    // Verificar se vetchaves são iguais
+    int igual = 1;
+    for (size_t i = 0; i < dimensoes; i++) {
+        if (nodo->vetchave[i] != vetchave[i]) {
+            igual = 0;
+        }
+    }
+    
+    if (igual) {
         return nodo;
     }
     
@@ -133,17 +145,22 @@ struct nodo *buscar_kdtree(struct nodo *nodo, double *vetchave, uint16_t coord, 
 }
 
 // Retorna um vetor com os z vizinhos mais próximos
-struct vizinho *encontrar_z_vizinhos(struct nodo *nodo, uint16_t coord, uint16_t dimensoes, 
-                                    double *vetchave, struct vizinho *melhor) {
+struct vizinho **encontrar_z_vizinhos(struct nodo *nodo, uint16_t coord, uint16_t dimensoes, 
+                                    double *vetchave, struct vizinho **melhores) {
     if (!nodo) {
         matarProgramaPonteiroNulo();
     }
+
+    // Alterar lógica de comparação para que compare com o vizinho mais distante
+    // Quando achar um vizinho mais próximo, verificar se o vetor está cheio
+        // Se estiver tirar o mais distante e subtituir pelo novo e ordenar novamente
+        // Se não estiver cheio, adicionar no vetor
+
     
     // Verifica se nodo é folha (sem filhos)
     if (nodo->fd == NULL && nodo->fe == NULL) {
         double distancia = distancia_euclidiana(nodo->vetchave, vetchave, dimensoes);
-
-        if (distancia < melhor->distancia) {
+        if (distancia < melhores[0]->distancia) {
             struct vizinho *ret = malloc(sizeof(struct vizinho));
             if (!ret) {
                 matarProgramaFaltaMemoria();
@@ -152,7 +169,7 @@ struct vizinho *encontrar_z_vizinhos(struct nodo *nodo, uint16_t coord, uint16_t
             ret->nodo = nodo;
             return ret;
         } else {
-            return melhor;
+            return melhores;
         }
     }
 
@@ -165,9 +182,9 @@ struct vizinho *encontrar_z_vizinhos(struct nodo *nodo, uint16_t coord, uint16_t
         sec = nodo->fe;
     }
 
-    melhor = encontrar_z_vizinhos(prim, (coord + 1) % dimensoes, dimensoes, vetchave, melhor);
+    melhores = encontrar_z_vizinhos(prim, (coord + 1) % dimensoes, dimensoes, vetchave, melhores);
     double distancia = distancia_euclidiana(nodo->vetchave, vetchave, dimensoes);
-    if (distancia < melhor->distancia) {
+    if (distancia < melhores[0]->distancia) {
         melhor->distancia = distancia;
         melhor->nodo = nodo;
     }
