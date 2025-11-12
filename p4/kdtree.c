@@ -4,53 +4,22 @@
 #include <stdint.h>
 #include <math.h>
 
+#include "erro.h"
 #include "kdtree.h"
+#include "utils.h"
 #include "fila.h"
 #include "max_heap.h"
 
-
-
 /* TODO
 - Ver como funciona árvore kd balanceada
-- Arrumar o z_vizinhos para encontrar todos os z vizinhos (sem repetir)
-    - IDEIA: salvar todas as distâncias dos nodos em relação à coordenada, ordenar e retornar os z primeiros
+- Liberar memórias alocadas
+- Padronizar nomes
+- Organizar arquivos
 */
 
-// FUNÇÕES AUXILIARES
-struct nodo *criar_nodo(uint16_t classe, double *vetchave) {
-    struct nodo *nodo = malloc(sizeof(struct nodo));
-    if (!nodo) {
-        matarProgramaFaltaMemoria();
-    }
-    nodo->fd = NULL;
-    nodo->fe = NULL;
-    nodo->pai = NULL;
-    nodo->vetchave = vetchave;
-    nodo->classe = classe;
-
-    return nodo;
-}
-
-double *ler_pontos(uint16_t dimensoes) {
-    double *vetchave = malloc(dimensoes * sizeof(double));
-    for (size_t i = 0; i < dimensoes; i++) {
-        scanf("%lf", &vetchave[i]);
-    }
-    return vetchave;
-}
-
-double distancia_euclidiana(double *prim, double *seg, uint16_t dimensoes) {
-    double distancia = 0;
-    for (size_t i = 0; i < dimensoes; i++) {
-        distancia = distancia + pow((prim[i] - seg[i]), 2);
-    }
-    distancia = sqrt(distancia);
-    return distancia;
-}
-
 struct nodo *inserir(struct nodo **raiz, double *vetchave, uint16_t classe, uint16_t dimesoes) {
-    if (!(*raiz) || !vetchave) {
-        matarProgramaPonteiroNulo();
+    if (!vetchave) {
+        matar_programa_ponteiro_nulo();
     }
     
     // Indica qual coordenada do nodo está sendo analisada
@@ -72,7 +41,7 @@ struct nodo *inserir(struct nodo **raiz, double *vetchave, uint16_t classe, uint
         } else {
             atual = atual->fd;
         }
-        coord = (coord + 1) % dimesoes;
+        coord = (coord + 1) % dimesoes; 
     }
     novo->pai = pai;
 
@@ -80,6 +49,8 @@ struct nodo *inserir(struct nodo **raiz, double *vetchave, uint16_t classe, uint
     if (pai == NULL) {
         *raiz = novo;
     } else { 
+        // coord deve ser a mesma do último teste do while
+        coord = (coord - 1 + dimesoes) % dimesoes;
         if (novo->vetchave[coord] < pai->vetchave[coord]) {
             pai->fe = novo;
         } else {
@@ -89,20 +60,17 @@ struct nodo *inserir(struct nodo **raiz, double *vetchave, uint16_t classe, uint
     return novo;
 }
 
-
-// FUNÇÕES OBRIGATÓRIAS
-// árvore não precisa ser balanceada
 void criar_kdtree(struct nodo **raiz, uint16_t num_nodos, uint16_t dimensoes) {
     if (!raiz) {
-        matarProgramaPonteiroNulo();
+        matar_programa_ponteiro_nulo();
     }
     
+    // Ler todos os nodos
     printf("Insira os pontos.\n");
-    //Ler todos os nodos
     for (int16_t i = 0; i < num_nodos; i++) {
         double *vetchave = malloc(dimensoes * sizeof(double));
         if (!vetchave) {
-            matarProgramaFaltaMemoria();
+            matar_programa_falta_memoria();
         }
 
         // Ler todos os pontos do nodo
@@ -117,16 +85,15 @@ void criar_kdtree(struct nodo **raiz, uint16_t num_nodos, uint16_t dimensoes) {
     }
 }    
 
-// Encontra o nodo que possui a coordenada parâmetro ou retorna nulo
-struct nodo *buscar_kdtree(struct nodo *nodo, double *vetchave, uint16_t coord, uint16_t dimensoes) {
+struct nodo *buscar_kdtree(struct nodo *nodo, double *vetchave, 
+                            uint16_t coord, uint16_t dimensoes) {
     if (!vetchave) {
-        matarProgramaPonteiroNulo();
+        matar_programa_ponteiro_nulo();
     }
     
     if (!nodo) {
         return nodo;
     }
-
     // Verificar se vetchaves são iguais
     int igual = 1;
     for (size_t i = 0; i < dimensoes; i++) {
@@ -134,47 +101,54 @@ struct nodo *buscar_kdtree(struct nodo *nodo, double *vetchave, uint16_t coord, 
             igual = 0;
         }
     }
-    
     if (igual) {
         return nodo;
     }
     
+    // Verifica para qual lado a busca deve continuar
     if (vetchave[coord] < nodo->vetchave[coord]) {
         return buscar_kdtree(nodo->fe, vetchave, (coord + 1) % dimensoes, dimensoes);
     }
     return buscar_kdtree(nodo->fd, vetchave, (coord + 1) % dimensoes, dimensoes);
 }
 
-
-// COLOCAR NA MAIN
-// // Alocação dinâmica do vetor que armazenará os z vizinhos mais próximos
-//     struct vizinhos *vizinhos = malloc(sizeof(struct vizinhos));
-//     if (!vizinhos) {
-//         matarProgramaFaltaMemoria();
-//     }
-//     vizinhos->melhores = malloc(z * sizeof(struct vizinho));
-//     vizinhos->quantidade = 0;
-// Retorna um vetor com os z vizinhos mais próximos
-struct vizinhos *encontrar_z_vizinhos(struct nodo *nodo, uint16_t coord, uint16_t dimensoes, 
-                                    double *vetchave, struct vizinhos *vizinhos, uint32_t z) {
-    if (!nodo || !vetchave || !vizinhos) {
-        matarProgramaPonteiroNulo();
+// Adiciona nodo ao vetor e o ordena de forma que a maior distância fique no primeiro elemento
+void adiciona_ordena(struct vizinhos *vizinhos, struct nodo *nodo, double distancia, uint32_t z) {
+    if (!vizinhos || !nodo) {
+        matar_programa_ponteiro_nulo();
     }
+    
+    // Se o vetor não está cheio, vai adicionando nodos sem realizar verificações
+    if (vizinhos->quantidade < z) {
+        vizinhos->melhores[vizinhos->quantidade].distancia = distancia;
+        vizinhos->melhores[vizinhos->quantidade].nodo = nodo;
+        vizinhos->quantidade++;
+    } else {// Se o vetor está com z elementos
+        if (distancia < vizinhos->melhores[0].distancia) {
+            // adicionar no fim do vetor, substituindo o mais distante
+            vizinhos->melhores[0].distancia = distancia;
+            vizinhos->melhores[0].nodo = nodo;
+        }
+    }
+    // ordenar
+    heap_sort(vizinhos->melhores, vizinhos->quantidade); // Usei o heapsort para que o maior esteja sempre no primeiro item do vetor
+}
 
-    // Alterar lógica de comparação para que compare com o vizinho mais distante
-    // Quando achar um vizinho mais próximo, verificar se o vetor está cheio
-        // Se estiver tirar o mais distante e subtituir pelo novo e ordenar novamente
-        // Se não estiver cheio, adicionar no vetor
+void encontrar_z_vizinhos(struct nodo *nodo, uint16_t coord, uint16_t dimensoes, 
+                        double *vetchave, struct vizinhos *vizinhos, uint32_t z) {
+    if (!nodo) {
+        return;
+    }
+        
+    if(!vetchave || !vizinhos) {
+        matar_programa_ponteiro_nulo();
+    }
 
     // Verifica se nodo é folha (sem filhos)
     if (nodo->fd == NULL && nodo->fe == NULL) {
-        double distancia = distancia_euclidiana(nodo->vetchave, vetchave, dimensoes);
-        if (vizinhos->quantidade > 0) {
-            if (distancia < vizinhos->melhores[0]->distancia) {
-                adiciona_ordena(vizinhos, nodo, distancia, z);
-            }
-        }
-        return vizinhos;
+        double distancia = distancia_euclidiana(nodo->vetchave, vetchave, dimensoes);   
+        adiciona_ordena(vizinhos, nodo, distancia, z);
+        return;
     }
 
     // Define para qual lado da árvore irá continuar a procura
@@ -187,85 +161,74 @@ struct vizinhos *encontrar_z_vizinhos(struct nodo *nodo, uint16_t coord, uint16_
         sec = nodo->fe;
     }
 
-    vizinhos = encontrar_z_vizinhos(prim, (coord + 1) % dimensoes, dimensoes, vetchave, vizinhos, z);
+    encontrar_z_vizinhos(prim, (coord + 1) % dimensoes, dimensoes, vetchave, vizinhos, z);
     double distancia = distancia_euclidiana(nodo->vetchave, vetchave, dimensoes);
-    if (vizinhos->quantidade < z) {
-        if (distancia < vizinhos->melhores[0]->distancia) {
-            adiciona_ordena(vizinhos, nodo, distancia, z);
-        }
-    }
+    adiciona_ordena(vizinhos, nodo, distancia, z);
     
-    double dist_plano = nodo->vetchave[coord] - vetchave[coord];
+    double dist_plano = fabs(nodo->vetchave[coord] - vetchave[coord]);
     double pior_dist = -1.0; // valor arbitrário para considerar como a do pior vizinho
 
     // Atualiza a pior distância caso o vetor esteja cheio
-    if (vizinhos->quantidade == z) { // vetor de vizinhos está cheio
-        pior_dist = vizinhos->melhores[0]->distancia; 
+    if (vizinhos->quantidade == z) {
+        pior_dist = vizinhos->melhores[0].distancia; 
     }
     
-
     // Checar o outro lado da árvore quando ela não estiver cheia ou quando a distância do plano é menor que a pior distância
     if (vizinhos->quantidade < z || dist_plano < pior_dist) {
         encontrar_z_vizinhos(sec, (coord + 1) % dimensoes, dimensoes, vetchave, vizinhos, z);
     }
     
-    return vizinhos;
-}
-
-void adiciona_ordena(struct vizinhos *vizinhos, struct nodo *nodo, double distancia, uint32_t z) {
-    if (vizinhos->quantidade == z) { // Substituir o mais distante
-        vizinhos->melhores[0]->distancia = distancia;
-        vizinhos->melhores[0]->nodo = nodo;
-    } else { // adicionar no fim do vetor
-        vizinhos->melhores[vizinhos->quantidade]->distancia = distancia;
-        vizinhos->melhores[vizinhos->quantidade]->nodo = nodo;
-        vizinhos->quantidade++;
-    }
-    // ordenar
-    heapSort(vizinhos->melhores, vizinhos->quantidade); // Usei o heapsort para que o maior esteja sempre no primeiro item do vetor
+    return;
 }
 
 void imprimir_em_largura(struct nodo *raiz, uint16_t num_nodos, uint16_t dimensoes) {
     if(!raiz) {
-        matarProgramaPonteiroNulo();
+        matar_programa_ponteiro_nulo();
     }
     
     uint32_t tamanho = num_nodos;
+    uint32_t qtd_niveis = num_nodos;
 
     struct fila *fila = fila_criar(tamanho);
+    struct fila_nivel *fila_niv = fila_criar_nivel(qtd_niveis);
 
+    uint16_t nivel = 0;
+
+    enfileirar_nivel(fila_niv, nivel, qtd_niveis);
     enfileirar(fila, raiz, tamanho);
+
     while(fila->tamanho > 0) {
         struct nodo *nodo = fila_remove(fila);
+        uint32_t nivel_nv = fila_remove_nivel(fila_niv);
+
+        // Quebra de linha ao mudar de nível, exceto antes do primeiro nível
+        if (nivel_nv != nivel && nivel_nv > 0) {
+            printf("\n");
+        }
+        // Imprime o nível para cada nível novo
+        if (nivel_nv != nivel || nivel_nv == 0) {
+            printf("[%d]", nivel_nv);
+        }
+        nivel = nivel_nv;
+
         printf("( ");
         for (int16_t i = 0; i < dimensoes; i++) {
             printf("%.2f ", nodo->vetchave[i]);
         }
         printf(" ) ");
         
-
         if(nodo->fe != NULL) {
             enfileirar(fila, nodo->fe, tamanho);
+            enfileirar_nivel(fila_niv, nivel + 1, qtd_niveis);
         }
 
         if(nodo->fd != NULL) {
             enfileirar(fila, nodo->fd, tamanho);
+            enfileirar_nivel(fila_niv, nivel + 1, qtd_niveis);
         }
     }
 
     printf("\n");
     fila = fila_libera(fila);
-}
-
-
-
-// FUNÇÕES DE ERRO
-void matarProgramaFaltaMemoria() {
-    fprintf(stderr, "Erro por falta de memória\n");
-    exit(1);
-}
-    
-void matarProgramaPonteiroNulo() {
-    fprintf(stderr, "Erro por ponteiro nulo\n");
-    exit(1);
+    fila_niv = fila_libera_nivel(fila_niv);
 }

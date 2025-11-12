@@ -21,7 +21,7 @@ struct vizinho {
 
 struct vizinhos {
     uint16_t quantidade;
-    struct vizinho **melhores;
+    struct vizinho *melhores;
 };
 
 // Protótipos de funções opcionais
@@ -36,14 +36,10 @@ struct nodo *inserir(struct nodo **raiz, double *vetchave, uint16_t classe, uint
 void criar_kdtree(struct nodo **raiz, uint16_t num_nodos, uint16_t dimensoes); 
 // Encontra o nodo com as coordenadas ou nulo
 struct nodo *buscar_kdtree(struct nodo *raiz, double *vetchave, uint16_t coord, uint16_t dimensoes);
-// Encontra o vizinho mais próximo da coordenada passada
-struct vizinho *encontrar_z_vizinhos(struct nodo *raiz, uint16_t coord, uint16_t dimensoes, double 
-                                    *vetchave, struct vizinho *melhor);
+// Altera o vetor passado como parâmetro para entregar os z vizinhos mais próximos
+void encontrar_z_vizinhos(struct nodo *raiz, uint16_t coord, uint16_t dimensoes, double 
+                                    *vetchave, struct vizinhos *vizinhos, uint32_t z);
+// Imprime a árvore seguindo a ordem dos níveis
 void imprimir_em_largura(struct nodo *raiz, uint16_t num_nodos, uint16_t dimensoes);
-
-// Prtótipos de funções de erro
-// FUNÇÕES DE ERRO
-void matarProgramaFaltaMemoria();
-void matarProgramaPonteiroNulo();
 
 #endif
