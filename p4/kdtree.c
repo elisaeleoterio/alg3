@@ -12,12 +12,9 @@
 
 /* TODO
 - Ver como funciona árvore kd balanceada
-- Liberar memórias alocadas
-- Padronizar nomes
-- Organizar arquivos
 */
 
-struct nodo *inserir(struct nodo **raiz, double *vetchave, uint16_t classe, uint16_t dimesoes) {
+struct nodo *inserir(struct nodo **raiz, float *vetchave, uint16_t classe, uint16_t dimesoes) {
     if (!vetchave) {
         matar_programa_ponteiro_nulo();
     }
@@ -68,13 +65,7 @@ void criar_kdtree(struct nodo **raiz, uint16_t num_nodos, uint16_t dimensoes) {
     // Ler todos os nodos
     printf("Insira os pontos.\n");
     for (int16_t i = 0; i < num_nodos; i++) {
-        double *vetchave = malloc(dimensoes * sizeof(double));
-        if (!vetchave) {
-            matar_programa_falta_memoria();
-        }
-
-        // Ler todos os pontos do nodo
-        vetchave = ler_pontos(dimensoes);
+        float *vetchave = ler_pontos(dimensoes);
 
         // Ler classe
         uint16_t classe;
@@ -85,7 +76,7 @@ void criar_kdtree(struct nodo **raiz, uint16_t num_nodos, uint16_t dimensoes) {
     }
 }    
 
-struct nodo *buscar_kdtree(struct nodo *nodo, double *vetchave, 
+struct nodo *buscar_kdtree(struct nodo *nodo, float *vetchave, 
                             uint16_t coord, uint16_t dimensoes) {
     if (!vetchave) {
         matar_programa_ponteiro_nulo();
@@ -113,7 +104,7 @@ struct nodo *buscar_kdtree(struct nodo *nodo, double *vetchave,
 }
 
 // Adiciona nodo ao vetor e o ordena de forma que a maior distância fique no primeiro elemento
-void adiciona_ordena(struct vizinhos *vizinhos, struct nodo *nodo, double distancia, uint32_t z) {
+void adiciona_ordena(struct vizinhos *vizinhos, struct nodo *nodo, float distancia, uint32_t z) {
     if (!vizinhos || !nodo) {
         matar_programa_ponteiro_nulo();
     }
@@ -135,7 +126,7 @@ void adiciona_ordena(struct vizinhos *vizinhos, struct nodo *nodo, double distan
 }
 
 void encontrar_z_vizinhos(struct nodo *nodo, uint16_t coord, uint16_t dimensoes, 
-                        double *vetchave, struct vizinhos *vizinhos, uint32_t z) {
+                        float *vetchave, struct vizinhos *vizinhos, uint32_t z) {
     if (!nodo) {
         return;
     }
@@ -146,7 +137,7 @@ void encontrar_z_vizinhos(struct nodo *nodo, uint16_t coord, uint16_t dimensoes,
 
     // Verifica se nodo é folha (sem filhos)
     if (nodo->fd == NULL && nodo->fe == NULL) {
-        double distancia = distancia_euclidiana(nodo->vetchave, vetchave, dimensoes);   
+        float distancia = distancia_euclidiana(nodo->vetchave, vetchave, dimensoes);   
         adiciona_ordena(vizinhos, nodo, distancia, z);
         return;
     }
@@ -162,11 +153,11 @@ void encontrar_z_vizinhos(struct nodo *nodo, uint16_t coord, uint16_t dimensoes,
     }
 
     encontrar_z_vizinhos(prim, (coord + 1) % dimensoes, dimensoes, vetchave, vizinhos, z);
-    double distancia = distancia_euclidiana(nodo->vetchave, vetchave, dimensoes);
+    float distancia = distancia_euclidiana(nodo->vetchave, vetchave, dimensoes);
     adiciona_ordena(vizinhos, nodo, distancia, z);
     
-    double dist_plano = fabs(nodo->vetchave[coord] - vetchave[coord]);
-    double pior_dist = -1.0; // valor arbitrário para considerar como a do pior vizinho
+    float dist_plano = fabs(nodo->vetchave[coord] - vetchave[coord]);
+    float pior_dist = -1.0; // valor arbitrário para considerar como a do pior vizinho
 
     // Atualiza a pior distância caso o vetor esteja cheio
     if (vizinhos->quantidade == z) {

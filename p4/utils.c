@@ -9,7 +9,7 @@
 #include "utils.h"
 
 // FUNÇÕES AUXILIARES
-struct nodo *criar_nodo(uint16_t classe, double *vetchave) {
+struct nodo *criar_nodo(uint16_t classe, float *vetchave) {
     
     struct nodo *nodo = malloc(sizeof(struct nodo));
     if (!nodo) {
@@ -24,17 +24,17 @@ struct nodo *criar_nodo(uint16_t classe, double *vetchave) {
     return nodo;
 }
 
-double *ler_pontos(uint16_t dimensoes) {
+float *ler_pontos(uint16_t dimensoes) {
     // Aloca um vetor de dimensoes elementos de tamanho double
-    double *vetchave = malloc(dimensoes * sizeof(double));
+    float *vetchave = malloc(dimensoes * sizeof(float));
     for (size_t i = 0; i < dimensoes; i++) {
-        scanf("%lf", &vetchave[i]);
+        scanf("%f", &vetchave[i]);
     }
     return vetchave;
 }
 
-double distancia_euclidiana(double *prim, double *seg, uint16_t dimensoes) {
-    double distancia = 0;
+float distancia_euclidiana(float *prim, float *seg, uint16_t dimensoes) {
+    float distancia = 0;
     for (size_t i = 0; i < dimensoes; i++) {
         distancia = distancia + pow((prim[i] - seg[i]), 2);
     }
@@ -60,7 +60,11 @@ void imprimir_vizinhos(struct vizinhos *vizinhos, uint16_t dimesoes) {
         // Imprimir a classe
         printf(" (classe: %hd), ", vizinhos->melhores[i].nodo->classe);
         // Imprimir distância
-        printf("dist = %.2f\n", vizinhos->melhores[i].distancia);
+        printf("dist = %.2f", vizinhos->melhores[i].distancia);
+        if (i < vizinhos->quantidade - 1) {
+            printf("\n");
+        }
+        
     }
     printf(".\n");
 }

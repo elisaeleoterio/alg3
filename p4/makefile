@@ -17,3 +17,6 @@ erro.o: erro.c erro.h
 
 clean:
 	rm -f *.o *.gch $(nomePrograma)
+
+valgrind:
+	valgrind --leak-check=full --track-origins=yes ./$(nomePrograma)

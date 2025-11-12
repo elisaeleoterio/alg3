@@ -19,7 +19,7 @@ int main() {
     struct nodo *raiz = NULL;
 
    criar_kdtree(&raiz, n, k);
-//    imprimir_em_largura(raiz, n, k);
+    // imprimir_em_largura(raiz, n, k);
    printf("Árvore Construída.\n");
       
     char op;    
@@ -28,21 +28,21 @@ int main() {
 		switch (op) {
             case 'b': { // Realizar busca dos pontos enviados pelo usuário
                 // Ler pontos a buscar
-                double *vetchave = ler_pontos(k);
+                float *vetchave = ler_pontos(k);
                 struct nodo *busca = buscar_kdtree(raiz, vetchave, 0, k);
 				if(busca) {
                     printf("Encontrado. Classe %d.\n", busca->classe);
                 } else {
                     printf("Não encontrado.\n");
                 }
-                // Liberar vetchave e busca
+                free(vetchave);
                 break;
             }
             case 'z': {
                 // Quantidade de vizinhos a encontrar
                 uint32_t z;
                 scanf("%d", &z);
-                double *vetchave = ler_pontos(k);
+                float *vetchave = ler_pontos(k);
                 // Alocação dinâmica do vetor que armazenará os z vizinhos mais próximos
                 struct vizinhos *vizinhos = malloc(sizeof(struct vizinhos));
                 if (!vizinhos) {
